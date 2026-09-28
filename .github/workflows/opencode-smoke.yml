@@ -28,6 +28,8 @@ jobs:
         run: node --test packages/local-runtime/test/public-preview-core.test.mjs packages/local-runtime/test/public-static-preview.test.mjs packages/local-runtime/test/public-web-project.test.mjs packages/local-runtime/test/public-web-runtime.test.mjs packages/local-runtime/test/public-preview-gateway.test.mjs
       - name: Test independent Web presentation domain
         run: node --test upstream/opencode/packages/desktop/src/pixelcrab/public-web-preview-domain.test.mjs
+      - name: Verify a real Vite project and process cleanup
+        run: node --test packages/local-runtime/test/public-vite-runtime.mjs
       - name: Test evidence attachments and visual target verification
         run: bun test upstream/opencode/packages/app/src/pixelcrab/evidence-prompt.test.ts upstream/opencode/packages/app/src/pixelcrab/evidence-recheck-lifecycle.test.ts upstream/opencode/packages/app/src/pixelcrab/visual-change-set.test.ts
       - name: Install pinned native plugin API

@@ -4,9 +4,19 @@ import { mkdtemp, writeFile, mkdir, rm } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { discoverWebProject, webPreviewPortArgs } from '../src/web-project.ts'
-import { missingProjectDependencies, resolvePackageManager } from '../src/web-project-support.ts'
+import { missingProjectDependencies, resolvePackageManager, packageManagerExecutable } from '../src/web-project-support.ts'
 
 const roots = []
+test('Windows Node and Electron invoke Bun as an executable, not a cmd shim', () => {
+  for (const name of ['node.exe', 'electron.exe']) {
+    const runtime = { platform: 'win32', execPath: `C:\\tools\\${name}` }
+    assert.equal(packageManagerExecutable('bun', runtime), 'bun.exe')
+    assert.equal(packageManagerExecutable('npm', runtime), 'npm.cmd')
+  }
+  assert.equal(packageManagerExecutable('bun', { platform: 'win32', execPath: 'C:\\tools\\bun.exe' }), 'C:\\tools\\bun.exe')
+  assert.equal(packageManagerExecutable('bun', { platform: 'linux', execPath: '/usr/bin/node' }), 'bun')
+  assert.equal(packageManagerExecutable('pnpm', { platform: 'linux', execPath: '/usr/bin/node' }), 'pnpm')
+})
 async function fixture(manifest, html = false) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'pixelcrabs-web-project-'))
   roots.push(root)

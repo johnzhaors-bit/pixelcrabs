@@ -74,7 +74,7 @@ We are preparing the public Web edition in small, verifiable steps. The status c
 | Import the pinned OpenCode engine source | Available under `upstream/opencode` |
 | Separate shared preview contracts and Web capability registration | Published in this repository with tests |
 | Extract the static Web preview launch recipe | Implemented; isolated HTTP checks pass with Node |
-| Separate Web discovery, managed Node and owned process lifecycle | Published with independent tests; real framework execution remains to be verified |
+| Separate Web discovery, managed Node and owned process lifecycle | Published; static HTML and a real Vite project pass runtime lifecycle tests |
 | Connect Agent tools to preview management | Built-in preview plugin and desktop presentation connected |
 | Separate native preview host and visual workbench | Draft/existing session panels connected; native draft and screenshot smoke passed |
 | Generic network integration | Planned |
@@ -219,3 +219,5 @@ PixelCrab is built on [OpenCode](https://github.com/anomalyco/opencode). Upstrea
 [Start with PixelCrab →](https://pixelcrabs.com/en/#download)
 
 </div>
+
+The real Vite integration test installs a pinned Vite version in a fresh temporary directory, verifies transformed and updated source through the preview gateway, and checks process ownership and shutdown. Run `node --test packages/local-runtime/test/public-vite-runtime.mjs` with Bun 1.3.14 on PATH (or set `PIXELCRABS_TEST_BUN` to its absolute executable). It requires registry access and does not replace a real-model desktop editing acceptance test.

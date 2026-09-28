@@ -93,9 +93,16 @@ export function resolvePackageManager(directory: string, declaredValue?: unknown
   return "pnpm"
 }
 
-export function packageManagerExecutable(value: PreviewPackageManager) {
-  if (value === "bun" && path.basename(process.execPath).toLowerCase().startsWith("bun")) return process.execPath
-  if (process.platform !== "win32") return value
+export function packageManagerExecutable(
+  value: PreviewPackageManager,
+  runtime: { platform: NodeJS.Platform; execPath: string } = process,
+) {
+  const basename = runtime.platform === "win32" ? path.win32.basename(runtime.execPath) : path.basename(runtime.execPath)
+  if (value === "bun") {
+    if (/^bun(?:\.exe)?$/i.test(basename)) return runtime.execPath
+    return runtime.platform === "win32" ? "bun.exe" : "bun"
+  }
+  if (runtime.platform !== "win32") return value
   return `${value}.cmd`
 }
 
