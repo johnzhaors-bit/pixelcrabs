@@ -7,6 +7,7 @@ import { WebPreviewPanel, type WebPreviewPanelRuntime } from "./web-preview-pane
 import type { PixelCrabPreviewAPI, PixelCrabPreviewRecheckInput } from "./web-preview-contract"
 import { createPixelCrabEvidenceAttachment, createPixelCrabEvidenceImageAttachments } from "./evidence-prompt"
 import { formatVisualChangesAIPrompt, visualChangeRecheckExpectation, visualChangeRecheckPassed, type VisualChangeItem } from "./visual-change-set"
+import { reloadAndRecheck } from "./web-preview-recheck"
 
 export function publicWebPreviewAPI(): PixelCrabPreviewAPI | undefined {
   if (typeof window === "undefined") return
@@ -45,6 +46,8 @@ export function WebPreviewSession(props: { sessionID?: string; scope: string; on
   let pending: { scope: string; requests: PixelCrabPreviewRecheckInput[]; items?: readonly VisualChangeItem[]; phase: "waiting" | "running"; previousBusy: boolean } | undefined
   let generation = 0
   let disposed = false
+  let recheckAbort: AbortController | undefined
+  createEffect(() => { props.scope; recheckAbort?.abort(); recheckAbort = undefined })
   const append = (text: string, attachments: Array<{ label: string; filename: string; mime: string; url: string }> = []) => {
     const target = prompt.capture()
     const current = target.current()
@@ -62,6 +65,7 @@ export function WebPreviewSession(props: { sessionID?: string; scope: string; on
     target.set([...current, ...additions], offset)
   }
   const arm = (requests: PixelCrabPreviewRecheckInput[], items?: readonly VisualChangeItem[]) => {
+    recheckAbort?.abort()
     generation++
     pending = { scope: props.scope, requests, items, phase: "waiting", previousBusy: busy() }
     setVerification("Added to the conversation draft. Send your request to apply changes.")
@@ -80,18 +84,19 @@ export function WebPreviewSession(props: { sessionID?: string; scope: string; on
     if (currentBusy) return
     pending = undefined
     const requestGeneration = generation
+    recheckAbort = new AbortController()
     setVerification("Rechecking the preview…")
-    void Promise.all(task.requests.map(request => api.recheck(request))).then(results => {
+    void reloadAndRecheck(api, task.requests, recheckAbort.signal).then(results => {
       if (disposed || requestGeneration !== generation || props.scope !== scope) return
       const passed = task.items
         ? task.items.every(item => { const result = results.find(result => result.evidenceId === item.id); return !!result && visualChangeRecheckPassed(item, result) })
         : results.every(result => result.status === "matched" && result.lifecycleStatus === "revalidated")
       setVerification(passed ? (task.items ? "Recorded visual targets verified." : "Selected evidence relocated. Review the preview to confirm your request.") : "Preview verification incomplete. Inspect the page and retry with the Agent.")
     }).catch(error => {
-      if (!disposed && requestGeneration === generation) setVerification(error instanceof Error ? error.message : "Preview verification failed.")
+      if (!disposed && requestGeneration === generation && props.scope === scope) setVerification(error instanceof Error ? error.message : "Preview verification failed.")
     })
   })
-  onCleanup(() => { disposed = true; generation++; pending = undefined })
+  onCleanup(() => { disposed = true; generation++; pending = undefined; recheckAbort?.abort() })
   return <div class="flex flex-col flex-1 min-w-0 min-h-0">
     <WebPreviewPanel api={api} scope={props.scope} runtime={runtime()} suspended={!!dialog.active} busy={busy()} onClose={props.onClose}
       onEvidence={evidence => {

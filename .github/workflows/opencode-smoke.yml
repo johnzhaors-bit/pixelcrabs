@@ -31,7 +31,7 @@ jobs:
       - name: Verify a real Vite project and process cleanup
         run: node --test packages/local-runtime/test/public-vite-runtime.mjs
       - name: Test evidence attachments and visual target verification
-        run: bun test upstream/opencode/packages/app/src/pixelcrab/evidence-prompt.test.ts upstream/opencode/packages/app/src/pixelcrab/evidence-recheck-lifecycle.test.ts upstream/opencode/packages/app/src/pixelcrab/visual-change-set.test.ts
+        run: bun test upstream/opencode/packages/app/src/pixelcrab/web-preview-recheck.test.ts upstream/opencode/packages/app/src/pixelcrab/evidence-prompt.test.ts upstream/opencode/packages/app/src/pixelcrab/evidence-recheck-lifecycle.test.ts upstream/opencode/packages/app/src/pixelcrab/visual-change-set.test.ts
       - name: Install pinned native plugin API
         working-directory: packages/local-runtime
         run: bun install --frozen-lockfile --ignore-scripts
