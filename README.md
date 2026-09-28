@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🦀 PixelCrab
+# 🦀 PixelCrabs
 
 ### Have an idea? Make it real.
 
