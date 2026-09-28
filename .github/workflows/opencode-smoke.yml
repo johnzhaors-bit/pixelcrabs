@@ -42,6 +42,18 @@ jobs:
       - name: Verify synthetic recorder fixture
         working-directory: upstream/opencode/packages/http-recorder
         run: bun test test/record-replay.test.ts --test-name-pattern 'detects secret-looking values without returning the secret'
+      - name: Build the embedded public engine
+        working-directory: upstream/opencode/packages/opencode
+        env:
+          OPENCODE_VERSION: 0.0.0-preview-web
+          OPENCODE_CHANNEL: dev
+        run: bun script/build-node.ts
+      - name: Build the public desktop and session panel
+        working-directory: upstream/opencode/packages/desktop
+        env:
+          OPENCODE_CHANNEL: dev
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: bun x --no-install electron-vite build
       - name: Verify CLI and local API without an account
         working-directory: upstream/opencode
         run: |

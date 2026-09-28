@@ -42,7 +42,10 @@ export type FatalRendererError = {
   os?: string
 }
 
+import type { PixelCrabPreviewAPI } from "../pixelcrab/preview-contract"
+
 export type ElectronAPI = {
+  pixelcrabPreview: PixelCrabPreviewAPI
   killSidecar: () => Promise<void>
   installCli: () => Promise<string>
   awaitInitialization: () => Promise<ServerReadyData>

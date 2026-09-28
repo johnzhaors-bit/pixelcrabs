@@ -50,7 +50,7 @@ Local-first does not mean every model request is offline. When you choose an onl
 
 ## Open-source edition: first modules available
 
-This repository is the home of the **Web-focused open-source edition**. The OpenCode source baseline and the first preview contract and capability registration modules are available here under their MIT licenses. The upstream coding engine is included; the PixelCrabs desktop integration is still being separated and is not buildable as a complete product yet. The full desktop download is available now; it includes capabilities beyond the planned public edition.
+This repository is the home of the **Web-focused open-source edition**. The OpenCode source baseline and the first preview contract and capability registration modules are available here under their MIT licenses. The upstream coding engine and an experimental Web Preview desktop integration now build from this repository. It is a developer preview, not the finished independently branded distribution. The full desktop download is available now; it includes capabilities beyond the planned public edition.
 
 | Area | Planned public scope |
 | --- | --- |
@@ -62,7 +62,7 @@ This repository is the home of the **Web-focused open-source edition**. The Open
 
 PixelCrab account services, platform model billing, cloud hosting, marketplace publishing and dedicated mini app preview/publishing integrations are outside the public source scope. Design packs and other third-party resources have their own distribution and licensing requirements.
 
-We publish each module after reviewing its source boundary and verifying it independently. A complete desktop release will follow once the Web workflow builds and runs without private modules. Forking this repository gives you the upstream coding engine source and the foundation modules below. The PixelCrabs preview panel is not connected to that engine yet.
+We publish each module after reviewing its source boundary and verifying it independently. A complete desktop release will follow once the Web workflow builds and runs without private modules. Forking this repository gives you the upstream coding engine source and the foundation modules below. The preview panel is connected to the native engine and composer. Complete model-edit/recheck acceptance, automatic environment preparation, generic network integration and local export remain in progress.
 
 ## Development roadmap
 
@@ -75,12 +75,12 @@ We are preparing the public Web edition in small, verifiable steps. The status c
 | Separate shared preview contracts and Web capability registration | Published in this repository with tests |
 | Extract the static Web preview launch recipe | Implemented; isolated HTTP checks pass with Node |
 | Separate Web discovery, managed Node and owned process lifecycle | Published with independent tests; real framework execution remains to be verified |
-| Connect Agent tools to preview management | Preview plugin available; desktop presentation still in progress |
-| Separate native preview host and visual workbench | Native host modules published; Session UI wiring in progress |
+| Connect Agent tools to preview management | Built-in preview plugin and desktop presentation connected |
+| Separate native preview host and visual workbench | Draft/existing session panels connected; native draft and screenshot smoke passed |
 | Generic network integration | Planned |
 | Add an independent desktop identity and build configuration | Planned |
 | Complete dependency/license review and a clean Web workflow build | Required before the first source release |
-| Publish source and license incrementally | First modules available under MIT; desktop build instructions to follow |
+| Publish source and license incrementally | Reviewed modules under MIT; experimental desktop build instructions below |
 | Add Flutter capabilities | After the Web release |
 
 ### September 28, 2026 — Web foundation progress
@@ -126,7 +126,7 @@ Open the localhost URL printed in the terminal. Edit your files and refresh the 
 node packages/local-runtime/bin/static-preview.mjs /absolute/path/to/your/site 0
 ```
 
-This explicitly serves static HTML, CSS and browser JavaScript. React, Vue, Next.js and other source projects still need their framework's dev server. Extensionless routes fall back to `index.html`; missing assets return 404. The server binds only to loopback, rejects hidden paths and links outside the project, and does not list directories. Serve only trusted local projects: this is a development server, not a security sandbox or a production hosting service. The visual selection panel and Agent tool integration are not included yet.
+This explicitly serves static HTML, CSS and browser JavaScript. React, Vue, Next.js and other source projects still need their framework's dev server. Extensionless routes fall back to `index.html`; missing assets return 404. The server binds only to loopback, rejects hidden paths and links outside the project, and does not list directories. Serve only trusted local projects: this is a development server, not a security sandbox or a production hosting service. The standalone command does not open the desktop panel; use the desktop build below for visual selection.
 
 ## Web project and runtime APIs
 
@@ -134,7 +134,7 @@ The shared Web modules now expose `discoverWebProject(directory)` and `createWeb
 
 The manager owns its child processes, verifies listener ownership, scopes runtimes to a conversation, routes local HTTP/HMR through a runtime gateway and recovers resources on stop or project switch. It uses the current executable for the managed Node shim; an Electron host uses Electron's Node mode. It does not install system Node. Windows ownership checks use PowerShell; macOS/Linux require `lsof`. These are trusted development tools, not a sandbox for untrusted projects.
 
-Independent tests cover static startup, reuse, project switching, cross-conversation rejection, cancellation and cleanup. A running process does not establish that a desktop panel has displayed the right page. The native Agent plugin is available below. The visual panel, generic network integration and full desktop build remain in preparation.
+Independent tests cover static startup, reuse, project switching, cross-conversation rejection, cancellation and cleanup. A running process does not establish that a desktop panel has displayed the right page. The native Agent plugin is available below. The desktop panel and build are available below; generic network integration remains in preparation.
 
 ## Connect the native OpenCode preview tool
 
@@ -146,9 +146,9 @@ bun install --frozen-lockfile --ignore-scripts
 bun test test/web-preview-plugin.test.ts
 ```
 
-Add the absolute file URL of `packages/local-runtime/src/web-preview-plugin.ts` to the `plugin` array in your project's OpenCode configuration. Merge it with your existing configuration; do not replace your providers or permissions. For example, on Windows the URL is `file:///C:/src/pixelcrabs/packages/local-runtime/src/web-preview-plugin.ts`, and on macOS/Linux `file:///home/you/pixelcrabs/packages/local-runtime/src/web-preview-plugin.ts`.
+The vendored engine already includes this plugin; do not register it a second time. To use the standalone plugin with a separate compatible OpenCode checkout instead, add the absolute file URL of `packages/local-runtime/src/web-preview-plugin.ts` to the `plugin` array in your project's OpenCode configuration. Merge it with your existing configuration; do not replace your providers or permissions. For example, on Windows the URL is `file:///C:/src/pixelcrabs/packages/local-runtime/src/web-preview-plugin.ts`, and on macOS/Linux `file:///home/you/pixelcrabs/packages/local-runtime/src/web-preview-plugin.ts`.
 
-After restarting OpenCode, ask the Agent to discover the current project and start a Web preview with `pixelcrabs_preview`. It exposes discover, start, verify, list, logs and stop; starting a process uses native permission checks. External project directories require a separate native permission. Runtime IDs are scoped to the conversation. The plugin returns a local URL and process evidence; this batch does not yet display the page in a PixelCrabs desktop panel. Code changes still use OpenCode's own editing tools.
+After restarting OpenCode, ask the Agent to discover the current project and start a Web preview with `pixelcrabs_preview`. It exposes discover, start, verify, list, logs and stop; starting a process uses native permission checks. External project directories require a separate native permission. Runtime IDs are scoped to the conversation. The plugin returns a local URL and process evidence; the integrated desktop opens that verified runtime in the preview panel. Code changes still use OpenCode's own editing tools.
 
 The plugin depends only on the reviewed runtime and OpenCode's MIT plugin API. It does not connect to PixelCrab account, billing, marketplace or publishing services. Normal engine disposal or deleting the session releases its previews. Framework dependencies must still be prepared through the project's own package manager and the normal OpenCode permission flow.
 
@@ -156,7 +156,7 @@ The plugin depends only on the reviewed runtime and OpenCode's MIT plugin API. I
 
 The desktop source now includes a shared Web preview controller, renderer bridge, preload API and IPC registration under `upstream/opencode/packages/desktop/src/pixelcrab`. These use Electron's isolated WebContentsView, bounded DOM evidence, runtime/project identity, route-aware rechecks and a floating visual-change panel. The host must register the bridge and supply safe external-browser handling. Framework-specific presentation policies are not included.
 
-Windows smoke checks exercised real Electron DOM selection, mode switching, empty-request evidence attachment, rechecking and navigation staleness. In the hidden test window no screenshot was available, so structured evidence continued with an explicit unavailable screenshot status. This is not a full desktop or visible-window screenshot acceptance test. Session UI integration and a complete public build remain in progress.
+Windows smoke checks exercised real Electron DOM selection, mode switching, empty-request evidence attachment, rechecking and navigation staleness. In the hidden test window no screenshot was available, so structured evidence continued with an explicit unavailable screenshot status. A subsequent isolated desktop test also passed: the built-in tool is present, a real page renders, an empty-description point selection enters the native new-session draft, and a visible screenshot is captured. This still does not prove a complete real-model editing round trip.
 
 ```sh
 node --test upstream/opencode/packages/desktop/src/pixelcrab/public-web-preview-domain.test.mjs
@@ -178,7 +178,31 @@ The registry describes capabilities; the static CLI provides one executable prev
 
 ## Evidence modules
 
-The reviewed `upstream/opencode/packages/app/src/pixelcrab/` modules now include structured text/image attachments, visual change drafts and task-completion recheck state. They use the original OpenCode conversation rather than a second model loop. Missing target values or an unrelated evidence ID cannot pass a visual change check. These are reusable modules; the complete public session panel and real model round trip are still being integrated.
+The reviewed `upstream/opencode/packages/app/src/pixelcrab/` modules now include structured text/image attachments, visual change drafts and task-completion recheck state. They use the original OpenCode conversation rather than a second model loop. Missing target values or an unrelated evidence ID cannot pass a visual change check. These modules now drive the public session panel. Complete real-model editing and recheck acceptance remains pending.
+
+## Build the experimental desktop
+
+Use Node.js 24+, Bun 1.3.14 and Git. From this repository root:
+
+```sh
+cd packages/local-runtime
+bun install --frozen-lockfile --ignore-scripts
+cd ../../upstream/opencode
+bun install --frozen-lockfile
+cd packages/opencode
+bun script/build-node.ts
+cd ../desktop
+node node_modules/electron/install.js
+bun scripts/copy-icons.ts dev
+bun x --no-install electron-vite build
+bun x --no-install electron-vite preview
+```
+
+This uses the embedded Node sidecar (leave `OPENCODE_SIDECAR_V2` unset). Open a project, use your normal OpenCode provider and ask the Agent to discover and start a preview with `pixelcrabs_preview`. The Web Preview panel is also available in a new-session draft; an HTTP/HTTPS address can be opened manually. Point/region evidence and multi-selection targets are added to the composer for you to review and send. The panel never edits project files itself.
+
+The development UI currently retains upstream branding and identity. Do not publish installers from it yet: independent branding/update configuration, network integration, dependency preparation and local build/export are still pending. Windows Git checkouts that materialize the upstream `custom-elements.d.ts` symlink as plain text need a portable typecheck fix; this does not prevent the tested desktop bundle build.
+
+After building, the isolated desktop smoke can be run with Electron and `scripts/test-desktop-session.cjs` from the repository root. It creates temporary application/project state and closes its own app when finished. Check `.tmp/full-desktop-smoke-result.json`; a launcher exit code alone is not acceptance. No model call is made by that test.
 
 ## Follow along
 

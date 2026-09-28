@@ -6,7 +6,8 @@ import { homedir, tmpdir } from "node:os"
 import { join } from "node:path"
 import { getCACertificates, setDefaultCACertificates } from "node:tls"
 import type { Event } from "electron"
-import { app, BrowserWindow } from "electron"
+import { app, BrowserWindow, shell } from "electron"
+import { registerWebPreviewIPC } from "../pixelcrab/web-preview-ipc"
 
 import { Deferred, Effect, Fiber } from "effect"
 import contextMenu from "electron-context-menu"
@@ -270,6 +271,11 @@ const main = Effect.gen(function* () {
   )
   app.setAsDefaultProtocolClient("opencode")
   registerRendererProtocol()
+  registerWebPreviewIPC({ openExternal: (value) => {
+    const url = new URL(value)
+    if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) return
+    void shell.openExternal(url.href).catch(() => {})
+  } })
   setDockIcon()
   const updater = setupAutoUpdater(stopSidecars)
   const menuDeps = {

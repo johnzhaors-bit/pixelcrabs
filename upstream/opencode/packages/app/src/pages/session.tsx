@@ -104,6 +104,8 @@ import { useUsageExceededDialogs } from "./session/usage-exceeded-dialogs"
 import { createSessionOwnership } from "./session/session-ownership"
 import { createSessionLineage } from "./session/session-lineage"
 
+import { WebPreviewSession, publicWebPreviewAPI } from "@/pixelcrab/web-preview-session"
+
 type FollowupItem = FollowupDraft & { id: string }
 type FollowupEdit = Pick<FollowupItem, "id" | "prompt" | "context">
 const emptyFollowups: FollowupItem[] = []
@@ -363,6 +365,7 @@ export default function Page() {
   const serverSDK = useServerSDK()
   const settings = useSettings()
   const platform = usePlatform()
+  const [webPreviewOpen, setWebPreviewOpen] = createSignal(!!publicWebPreviewAPI())
   const prompt = usePrompt()
   const comments = useComments()
   const command = useCommand()
@@ -2249,6 +2252,7 @@ export default function Page() {
   return (
     <SessionRouteFrame>
       <SessionHeader />
+      <Show when={publicWebPreviewAPI()}><button class="px-3 py-1 text-xs text-left" onClick={() => setWebPreviewOpen(value => !value)}>Web Preview</button></Show>
       <div
         ref={panelRow}
         class="flex-1 min-h-0 flex flex-col md:flex-row"
@@ -2265,7 +2269,7 @@ export default function Page() {
               !size.active() && !ui.reviewSnap && !desktopInlineTerminalOnlyOpen(),
           }}
           style={{
-            width: sessionPanelWidth(),
+            width: publicWebPreviewAPI() && webPreviewOpen() ? "42%" : sessionPanelWidth(),
           }}
         >
           {settings.general.newLayoutDesigns() ? (
@@ -2301,7 +2305,10 @@ export default function Page() {
           </Show>
         </div>
 
-        <Show when={!newSessionDesign() && desktopSidePanelOpen()}>
+        <Show when={publicWebPreviewAPI() && webPreviewOpen()}>
+          <WebPreviewSession sessionID={params.id} scope={sessionKey()} onClose={() => setWebPreviewOpen(false)} />
+        </Show>
+        <Show when={!webPreviewOpen() && !newSessionDesign() && desktopSidePanelOpen()}>
           <Suspense>
             <SessionSidePanel
               canReview={canReview}
@@ -2319,7 +2326,7 @@ export default function Page() {
             />
           </Suspense>
         </Show>
-        <Show when={newSessionDesign()}>
+        <Show when={!webPreviewOpen() && newSessionDesign()}>
           <Show when={isDesktop() ? desktopV2PanelLayout().visible : terminalOpen()}>
             <div class="min-w-0 h-full flex flex-1 flex-col">
               <Show when={isDesktop() && (desktopV2ReviewOpen() || desktopFileTreeOpen())}>

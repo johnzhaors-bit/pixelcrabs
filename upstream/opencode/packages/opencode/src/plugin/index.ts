@@ -63,6 +63,8 @@ export function experimentalWebSocketsEnabled(input: { enabled: boolean; channel
   return input.enabled || ["local", "dev", "beta"].includes(input.channel ?? InstallationChannel)
 }
 
+import { WebPreviewPlugin } from "../../../../../../packages/local-runtime/src/web-preview-plugin"
+
 // Built-in plugins that are directly imported (not installed from npm)
 function internalPlugins(flags: RuntimeFlags.Info): PluginInstance[] {
   return [
@@ -71,6 +73,7 @@ function internalPlugins(flags: RuntimeFlags.Info): PluginInstance[] {
       CodexAuthPlugin(input, {
         experimentalWebSockets: experimentalWebSocketsEnabled({ enabled: flags.experimentalWebSockets }),
       }),
+    WebPreviewPlugin,
     CopilotAuthPlugin,
     ModalPlugin,
     GitlabAuthPlugin,
