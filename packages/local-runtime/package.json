@@ -8,11 +8,13 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "test": "node --test test/public-preview-core.test.mjs test/public-static-preview.test.mjs"
+    "test": "node --test test/public-preview-core.test.mjs test/public-static-preview.test.mjs test/public-web-project.test.mjs test/public-web-runtime.test.mjs test/public-preview-gateway.test.mjs"
   },
   "exports": {
     "./protocol": "./src/preview-delivery-protocol.ts",
     "./web-capabilities": "./src/web-preview-capabilities.ts",
-    "./static-web-preview": "./src/static-web-preview.ts"
+    "./static-web-preview": "./src/static-web-preview.ts",
+    "./web-project": "./src/web-project.ts",
+    "./web-runtime": "./src/web-runtime.ts"
   }
 }

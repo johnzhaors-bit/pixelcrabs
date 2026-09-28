@@ -74,7 +74,8 @@ We are preparing the public Web edition in small, verifiable steps. The status c
 | Import the pinned OpenCode engine source | Available under `upstream/opencode` |
 | Separate shared preview contracts and Web capability registration | Published in this repository with tests |
 | Extract the static Web preview launch recipe | Implemented; isolated HTTP checks pass with Node |
-| Separate framework discovery, process lifecycle and agent tools | In progress |
+| Separate Web discovery, managed Node and owned process lifecycle | Published with independent tests; real framework execution remains to be verified |
+| Connect Agent tools to preview management | In progress |
 | Separate visual workbench and generic network integration | Planned |
 | Add an independent desktop identity and build configuration | Planned |
 | Complete dependency/license review and a clean Web workflow build | Required before the first source release |
@@ -126,12 +127,20 @@ node packages/local-runtime/bin/static-preview.mjs /absolute/path/to/your/site 0
 
 This explicitly serves static HTML, CSS and browser JavaScript. React, Vue, Next.js and other source projects still need their framework's dev server. Extensionless routes fall back to `index.html`; missing assets return 404. The server binds only to loopback, rejects hidden paths and links outside the project, and does not list directories. Serve only trusted local projects: this is a development server, not a security sandbox or a production hosting service. The visual selection panel and Agent tool integration are not included yet.
 
+## Web project and runtime APIs
+
+The shared Web modules now expose `discoverWebProject(directory)` and `createWebRuntimeManager()`. Discovery preserves Vite, Next.js, Nuxt and Astro projects, reports missing dependencies and never treats detection as a running preview. The caller explicitly selects an adapter and authorizes the project before starting it. Dependency installation is not automatic in this batch.
+
+The manager owns its child processes, verifies listener ownership, scopes runtimes to a conversation, routes local HTTP/HMR through a runtime gateway and recovers resources on stop or project switch. It uses the current executable for the managed Node shim; an Electron host uses Electron's Node mode. It does not install system Node. Windows ownership checks use PowerShell; macOS/Linux require `lsof`. These are trusted development tools, not a sandbox for untrusted projects.
+
+Independent tests cover static startup, reuse, project switching, cross-conversation rejection, cancellation and cleanup. A running process does not establish that a desktop panel has displayed the right page. The Agent tool, visual panel, generic network integration and full desktop build remain in preparation.
+
 ## Run the foundation tests
 
 Use **Node.js 24 or later**. No package installation or cloud account is needed for these modules.
 
 ```sh
-node --test packages/local-runtime/test/public-preview-core.test.mjs packages/local-runtime/test/public-static-preview.test.mjs
+node --test packages/local-runtime/test/public-preview-core.test.mjs packages/local-runtime/test/public-static-preview.test.mjs packages/local-runtime/test/public-web-project.test.mjs packages/local-runtime/test/public-web-runtime.test.mjs packages/local-runtime/test/public-preview-gateway.test.mjs
 ```
 
 - [`preview-delivery-protocol.ts`](packages/local-runtime/src/preview-delivery-protocol.ts): action envelopes, project/conversation scope checks and a capability registry.
