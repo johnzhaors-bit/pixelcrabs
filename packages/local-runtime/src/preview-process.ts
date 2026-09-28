@@ -12,8 +12,8 @@ export function previewSpawnInvocation(command: string, args: string[], options:
 
 export function sanitizePreviewLog(value: string) {
   return value.replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, "")
-    .replace(/\b(authorization|cookie|password|secret|token|session|api[_-]?key)(\s*[:=]\s*)([^\s,;]+)/gi, "$1$2[redacted]")
     .replace(/\bBearer\s+[A-Za-z0-9._~+/=-]+/gi, "Bearer [redacted]")
+    .replace(/\b(authorization|cookie|password|secret|token|session|api[_-]?key)(\s*[:=]\s*)([^\s,;]+)/gi, "$1$2[redacted]")
     .replace(/AIza[0-9A-Za-z_-]{35}/g, "[redacted]")
 }
 
@@ -37,12 +37,19 @@ export async function stopPreviewProcess(child: ChildProcess) {
   if (!child.pid) return
   if (process.platform === "win32") {
     if (child.exitCode !== null || child.signalCode !== null) return
-    await new Promise<void>((resolve, reject) => {
+    const exitCode = await new Promise<number | null>((resolve, reject) => {
       const killer = spawn("taskkill", ["/pid", String(child.pid), "/T", "/F"], { windowsHide: true, stdio: "ignore" })
       const timer = setTimeout(() => { killer.kill(); reject(new Error("Preview process cleanup timed out")) }, 5000)
       killer.once("error", error => { clearTimeout(timer); reject(error) })
-      killer.once("exit", code => { clearTimeout(timer); code === 0 || child.exitCode !== null ? resolve() : reject(new Error("Preview process cleanup failed")) })
+      killer.once("exit", code => { clearTimeout(timer); resolve(code) })
     })
+    // taskkill can report a disappearing descendant while the owned root's
+    // exit event is still queued. Wait for that event before judging cleanup.
+    if (exitCode !== 0 && child.exitCode === null && child.signalCode === null) await new Promise<void>(resolve => {
+      const timer = setTimeout(resolve, 2000)
+      child.once("exit", () => { clearTimeout(timer); resolve() })
+    })
+    if (exitCode !== 0 && child.exitCode === null && child.signalCode === null) throw new Error("Preview process cleanup failed")
   } else {
     try { process.kill(-child.pid, "SIGTERM") } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error

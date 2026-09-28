@@ -6,6 +6,11 @@ import os from 'node:os'
 import path from 'node:path'
 import { createWebRuntimeManager } from '../src/web-runtime.ts'
 import { previewPortAvailable } from '../src/preview-port.ts'
+import { sanitizePreviewLog } from '../src/preview-process.ts'
+
+test('authorization header masking does not leave a bearer value behind', () => {
+  assert.ok(!sanitizePreviewLog('Authorization: Bearer fixture-only').includes('fixture-only'))
+})
 
 function page(url) {
   const target = new URL(url)

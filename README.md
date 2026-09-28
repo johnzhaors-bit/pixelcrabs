@@ -76,7 +76,8 @@ We are preparing the public Web edition in small, verifiable steps. The status c
 | Extract the static Web preview launch recipe | Implemented; isolated HTTP checks pass with Node |
 | Separate Web discovery, managed Node and owned process lifecycle | Published with independent tests; real framework execution remains to be verified |
 | Connect Agent tools to preview management | Preview plugin available; desktop presentation still in progress |
-| Separate visual workbench and generic network integration | Planned |
+| Separate native preview host and visual workbench | Native host modules published; Session UI wiring in progress |
+| Generic network integration | Planned |
 | Add an independent desktop identity and build configuration | Planned |
 | Complete dependency/license review and a clean Web workflow build | Required before the first source release |
 | Publish source and license incrementally | First modules available under MIT; desktop build instructions to follow |
@@ -92,7 +93,7 @@ The contract and capability modules and a standalone static HTML preview are pub
 
 The [`upstream/opencode`](upstream/opencode) directory is based on official OpenCode [commit `9f69463f1d`](https://github.com/anomalyco/opencode/commit/9f69463f1d556af2b5b51d2efa1c04f5f544f911). It is an upstream snapshot, not a copy of the customized private PixelCrab source. Its original [MIT license](upstream/opencode/LICENSE), notices, lockfile and development documentation are preserved. One recorder test fixture is locally patched to construct a synthetic Google-key-shaped value instead of storing the original key-shaped literal. CI checks this fixture and rejects Google API key literals in tracked files; this targeted check complements GitHub secret scanning.
 
-The [foundation smoke workflow](https://github.com/johnzhaors-bit/pixelcrabs/actions/workflows/opencode-smoke.yml) checks dependency installation, CLI startup and a local API health request on Linux. Full PixelCrabs desktop and model-call validation remain separate. Native dependencies also require a working compiler toolchain and Python; Windows setup has not yet passed our clean-install check.
+The [foundation smoke workflow](https://github.com/johnzhaors-bit/pixelcrabs/actions/workflows/opencode-smoke.yml) checks dependency installation, CLI startup and a local API health request on Linux. Full PixelCrabs desktop and model-call validation remain separate. Native dependencies also require a working compiler toolchain and Python; Windows locked dependency installation and CLI startup have passed in a short-path checkout using a separate Bun cache; the full desktop build remains unverified.
 
 Install **Bun 1.3.14** and use the pinned lockfile:
 
@@ -150,6 +151,16 @@ Add the absolute file URL of `packages/local-runtime/src/web-preview-plugin.ts` 
 After restarting OpenCode, ask the Agent to discover the current project and start a Web preview with `pixelcrabs_preview`. It exposes discover, start, verify, list, logs and stop; starting a process uses native permission checks. External project directories require a separate native permission. Runtime IDs are scoped to the conversation. The plugin returns a local URL and process evidence; this batch does not yet display the page in a PixelCrabs desktop panel. Code changes still use OpenCode's own editing tools.
 
 The plugin depends only on the reviewed runtime and OpenCode's MIT plugin API. It does not connect to PixelCrab account, billing, marketplace or publishing services. Normal engine disposal or deleting the session releases its previews. Framework dependencies must still be prepared through the project's own package manager and the normal OpenCode permission flow.
+
+## Native Web presentation modules
+
+The desktop source now includes a shared Web preview controller, renderer bridge, preload API and IPC registration under `upstream/opencode/packages/desktop/src/pixelcrab`. These use Electron's isolated WebContentsView, bounded DOM evidence, runtime/project identity, route-aware rechecks and a floating visual-change panel. The host must register the bridge and supply safe external-browser handling. Framework-specific presentation policies are not included.
+
+Windows smoke checks exercised real Electron DOM selection, mode switching, empty-request evidence attachment, rechecking and navigation staleness. In the hidden test window no screenshot was available, so structured evidence continued with an explicit unavailable screenshot status. This is not a full desktop or visible-window screenshot acceptance test. Session UI integration and a complete public build remain in progress.
+
+```sh
+node --test upstream/opencode/packages/desktop/src/pixelcrab/public-web-preview-domain.test.mjs
+```
 
 ## Run the foundation tests
 
