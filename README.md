@@ -48,9 +48,9 @@ The website always links to the current installers and platform notes. The Windo
 
 Local-first does not mean every model request is offline. When you choose an online model, the context needed for the task is sent to that service. Model access, capabilities and charges depend on your provider.
 
-## Open-source edition: in preparation
+## Open-source edition: first modules available
 
-This repository is the home of the upcoming **Web-focused open-source edition**. Source code, a project license, build instructions and contribution guidelines have not been published here yet. The full desktop download is available now; it includes capabilities beyond the planned public edition.
+This repository is the home of the **Web-focused open-source edition**. The first preview contract and capability registration modules are available under MIT. The desktop edition is being separated into independently tested modules and is not buildable from this repository yet. The full desktop download is available now; it includes capabilities beyond the planned public edition.
 
 | Area | Planned public scope |
 | --- | --- |
@@ -62,13 +62,50 @@ This repository is the home of the upcoming **Web-focused open-source edition**.
 
 PixelCrab account services, platform model billing, cloud hosting, marketplace publishing and dedicated mini app preview/publishing integrations are outside the public source scope. Design packs and other third-party resources have their own distribution and licensing requirements.
 
-We will publish source only after its dependencies and release boundary have been reviewed and the Web workflow builds independently. Forking this repository today gives you this introduction, not a buildable desktop app.
+We publish each module after reviewing its source boundary and verifying it independently. A complete desktop release will follow once the Web workflow builds and runs without private modules. Forking this repository today gives you the foundation modules below, not a buildable desktop app.
+
+## Development roadmap
+
+We are preparing the public Web edition in small, verifiable steps. The status column distinguishes published modules from work still in preparation.
+
+| Milestone | Status |
+| --- | --- |
+| Define the Web-first public scope | Complete |
+| Separate shared preview contracts and Web capability registration | Published in this repository with tests |
+| Extract the static Web preview launch recipe | Implemented; isolated HTTP checks pass with Node |
+| Separate framework discovery, process lifecycle and agent tools | In progress |
+| Separate visual workbench and generic network integration | Planned |
+| Add an independent desktop identity and build configuration | Planned |
+| Complete dependency/license review and a clean Web workflow build | Required before the first source release |
+| Publish source and license incrementally | First modules available under MIT; desktop build instructions to follow |
+| Add Flutter capabilities | After the Web release |
+
+### September 28, 2026 — Web foundation progress
+
+The shared preview contracts and Web capability registration have been separated from the full product's platform registration. The static webpage launch recipe has also been extracted and tested in isolation: HTML, CSS and client-side routes can be served without the platform-specific modules. Existing project discovery tests continue to pass.
+
+The first contract and capability modules are now published here with independent tests. The static server and full desktop integration remain in preparation. Meanwhile, the [full desktop app](https://pixelcrabs.com/en/#download) is available to try.
+
+## Run the foundation tests
+
+Use **Node.js 24 or later**. No package installation or cloud account is needed for these modules.
+
+```sh
+node --test packages/local-runtime/test/public-preview-core.test.mjs
+```
+
+- [`preview-delivery-protocol.ts`](packages/local-runtime/src/preview-delivery-protocol.ts): action envelopes, project/conversation scope checks and a capability registry.
+- [`web-preview-capabilities.ts`](packages/local-runtime/src/web-preview-capabilities.ts): Web capability descriptors and snapshots.
+
+These modules describe capabilities; they do not start a preview server, execute a deployment, enforce operating-system permissions or provide a desktop UI. The host remains responsible for execution and authorization. More modules will arrive in reviewed batches.
 
 ## Follow along
 
-Try the desktop app, explore the [product](https://pixelcrabs.com/en/about/), and watch this repository for the first source release. You can [report a problem or share a use case](https://github.com/johnzhaors-bit/pixelcrabs/issues). Please include the platform, app version and steps to reproduce, and leave out credentials or private project content.
+Try the desktop app, explore the [product](https://pixelcrabs.com/en/about/), and watch this repository for the next source modules. You can [report a problem or share a use case](https://github.com/johnzhaors-bit/pixelcrabs/issues). Please include the platform, app version and steps to reproduce, and leave out credentials or private project content.
 
-Built on [OpenCode](https://github.com/anomalyco/opencode). Upstream projects retain their own licenses and attribution; this repository does not yet grant a license for unpublished PixelCrab source.
+The published source in this repository is available under the [MIT License](LICENSE). This license does not cover the separately distributed full desktop app or unpublished code and design resources.
+
+PixelCrab is built on [OpenCode](https://github.com/anomalyco/opencode). Upstream projects retain their own licenses and attribution; their source is not included in this initial foundation batch.
 
 <div align="center">
 

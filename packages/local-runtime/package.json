@@ -1,0 +1,17 @@
+{
+  "name": "@pixelcrabs/preview-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "test": "node --test test/public-preview-core.test.mjs"
+  },
+  "exports": {
+    "./protocol": "./src/preview-delivery-protocol.ts",
+    "./web-capabilities": "./src/web-preview-capabilities.ts"
+  }
+}
