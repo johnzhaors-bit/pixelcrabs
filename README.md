@@ -85,7 +85,7 @@ We are preparing the public Web edition in small, verifiable steps. The status c
 
 The shared preview contracts and Web capability registration have been separated from the full product's platform registration. The static webpage launch recipe has also been extracted and tested in isolation: HTML, CSS and client-side routes can be served without the platform-specific modules. Existing project discovery tests continue to pass.
 
-The first contract and capability modules are now published here with independent tests. The static server and full desktop integration remain in preparation. Meanwhile, the [full desktop app](https://pixelcrabs.com/en/#download) is available to try.
+The contract and capability modules and a standalone static HTML preview are published here with independent tests. Full desktop integration remains in preparation. Meanwhile, the [full desktop app](https://pixelcrabs.com/en/#download) is available to try.
 
 ## Run the OpenCode engine
 
@@ -110,18 +110,35 @@ bun dev serve --hostname 127.0.0.1 --port 4096
 
 This runs OpenCode with its original identity and provider configuration. It does not include PixelCrab account services, platform models, marketplace integrations or the PixelCrabs visual preview panel. The upstream repository also contains its own console and infrastructure code; those are upstream components, not the PixelCrab backend, and are not required to run the local engine. See the upstream [development guide](upstream/opencode/CONTRIBUTING.md) for its other entry points.
 
+## Preview a static webpage
+
+With **Node.js 24 or later**, serve an existing directory containing `index.html` from the repository root. No package installation or PixelCrab account is required:
+
+```sh
+node packages/local-runtime/bin/static-preview.mjs /absolute/path/to/your/site
+```
+
+Open the localhost URL printed in the terminal. Edit your files and refresh the browser to see changes; press **Ctrl+C** to stop. Pass a port as the second argument, or `0` to choose an available port:
+
+```sh
+node packages/local-runtime/bin/static-preview.mjs /absolute/path/to/your/site 0
+```
+
+This explicitly serves static HTML, CSS and browser JavaScript. React, Vue, Next.js and other source projects still need their framework's dev server. Extensionless routes fall back to `index.html`; missing assets return 404. The server binds only to loopback, rejects hidden paths and links outside the project, and does not list directories. Serve only trusted local projects: this is a development server, not a security sandbox or a production hosting service. The visual selection panel and Agent tool integration are not included yet.
+
 ## Run the foundation tests
 
 Use **Node.js 24 or later**. No package installation or cloud account is needed for these modules.
 
 ```sh
-node --test packages/local-runtime/test/public-preview-core.test.mjs
+node --test packages/local-runtime/test/public-preview-core.test.mjs packages/local-runtime/test/public-static-preview.test.mjs
 ```
 
 - [`preview-delivery-protocol.ts`](packages/local-runtime/src/preview-delivery-protocol.ts): action envelopes, project/conversation scope checks and a capability registry.
 - [`web-preview-capabilities.ts`](packages/local-runtime/src/web-preview-capabilities.ts): Web capability descriptors and snapshots.
+- [`static-web-preview.ts`](packages/local-runtime/src/static-web-preview.ts): a shared Node static-server launch recipe, used by the standalone CLI.
 
-These modules describe capabilities; they do not start a preview server, execute a deployment, enforce operating-system permissions or provide a desktop UI. The host remains responsible for execution and authorization. More modules will arrive in reviewed batches.
+The registry describes capabilities; the static CLI provides one executable preview path. These modules do not execute deployments, enforce operating-system permissions or provide a desktop UI. The host remains responsible for project authorization and integrated runtime management. More modules will arrive in reviewed batches.
 
 ## Follow along
 

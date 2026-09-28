@@ -8,10 +8,11 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "test": "node --test test/public-preview-core.test.mjs"
+    "test": "node --test test/public-preview-core.test.mjs test/public-static-preview.test.mjs"
   },
   "exports": {
     "./protocol": "./src/preview-delivery-protocol.ts",
-    "./web-capabilities": "./src/web-preview-capabilities.ts"
+    "./web-capabilities": "./src/web-preview-capabilities.ts",
+    "./static-web-preview": "./src/static-web-preview.ts"
   }
 }

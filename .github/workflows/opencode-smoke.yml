@@ -22,8 +22,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Test public preview contracts
-        run: node --test packages/local-runtime/test/public-preview-core.test.mjs
+      - name: Test public preview contracts and static server
+        run: node --test packages/local-runtime/test/public-preview-core.test.mjs packages/local-runtime/test/public-static-preview.test.mjs
       - name: Install official locked dependencies
         working-directory: upstream/opencode
         run: bun install --frozen-lockfile
