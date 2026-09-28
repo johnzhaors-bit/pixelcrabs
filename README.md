@@ -50,7 +50,7 @@ Local-first does not mean every model request is offline. When you choose an onl
 
 ## Open-source edition: first modules available
 
-This repository is the home of the **Web-focused open-source edition**. The first preview contract and capability registration modules are available under MIT. The desktop edition is being separated into independently tested modules and is not buildable from this repository yet. The full desktop download is available now; it includes capabilities beyond the planned public edition.
+This repository is the home of the **Web-focused open-source edition**. The OpenCode source baseline and the first preview contract and capability registration modules are available here under their MIT licenses. The upstream coding engine is included; the PixelCrabs desktop integration is still being separated and is not buildable as a complete product yet. The full desktop download is available now; it includes capabilities beyond the planned public edition.
 
 | Area | Planned public scope |
 | --- | --- |
@@ -62,7 +62,7 @@ This repository is the home of the **Web-focused open-source edition**. The firs
 
 PixelCrab account services, platform model billing, cloud hosting, marketplace publishing and dedicated mini app preview/publishing integrations are outside the public source scope. Design packs and other third-party resources have their own distribution and licensing requirements.
 
-We publish each module after reviewing its source boundary and verifying it independently. A complete desktop release will follow once the Web workflow builds and runs without private modules. Forking this repository today gives you the foundation modules below, not a buildable desktop app.
+We publish each module after reviewing its source boundary and verifying it independently. A complete desktop release will follow once the Web workflow builds and runs without private modules. Forking this repository gives you the upstream coding engine source and the foundation modules below. The PixelCrabs preview panel is not connected to that engine yet.
 
 ## Development roadmap
 
@@ -71,6 +71,7 @@ We are preparing the public Web edition in small, verifiable steps. The status c
 | Milestone | Status |
 | --- | --- |
 | Define the Web-first public scope | Complete |
+| Import the pinned OpenCode engine source | Available under `upstream/opencode` |
 | Separate shared preview contracts and Web capability registration | Published in this repository with tests |
 | Extract the static Web preview launch recipe | Implemented; isolated HTTP checks pass with Node |
 | Separate framework discovery, process lifecycle and agent tools | In progress |
@@ -85,6 +86,29 @@ We are preparing the public Web edition in small, verifiable steps. The status c
 The shared preview contracts and Web capability registration have been separated from the full product's platform registration. The static webpage launch recipe has also been extracted and tested in isolation: HTML, CSS and client-side routes can be served without the platform-specific modules. Existing project discovery tests continue to pass.
 
 The first contract and capability modules are now published here with independent tests. The static server and full desktop integration remain in preparation. Meanwhile, the [full desktop app](https://pixelcrabs.com/en/#download) is available to try.
+
+## Run the OpenCode engine
+
+The [`upstream/opencode`](upstream/opencode) directory contains the official OpenCode source at [commit `9f69463f1d`](https://github.com/anomalyco/opencode/commit/9f69463f1d556af2b5b51d2efa1c04f5f544f911). It is an upstream snapshot, not a copy of the customized private PixelCrab source. Its original [MIT license](upstream/opencode/LICENSE), notices, lockfile and development documentation are preserved.
+
+The [foundation smoke workflow](https://github.com/johnzhaors-bit/pixelcrabs/actions/workflows/opencode-smoke.yml) checks dependency installation, CLI startup and a local API health request on Linux. Full PixelCrabs desktop and model-call validation remain separate. Native dependencies also require a working compiler toolchain and Python; Windows setup has not yet passed our clean-install check.
+
+Install **Bun 1.3.14** and use the pinned lockfile:
+
+```sh
+cd upstream/opencode
+bun install --frozen-lockfile
+bun dev --help
+bun dev /absolute/path/to/your/project
+```
+
+For a local API server:
+
+```sh
+bun dev serve --hostname 127.0.0.1 --port 4096
+```
+
+This runs OpenCode with its original identity and provider configuration. It does not include PixelCrab account services, platform models, marketplace integrations or the PixelCrabs visual preview panel. The upstream repository also contains its own console and infrastructure code; those are upstream components, not the PixelCrab backend, and are not required to run the local engine. See the upstream [development guide](upstream/opencode/CONTRIBUTING.md) for its other entry points.
 
 ## Run the foundation tests
 
@@ -105,7 +129,7 @@ Try the desktop app, explore the [product](https://pixelcrabs.com/en/about/), an
 
 The published source in this repository is available under the [MIT License](LICENSE). This license does not cover the separately distributed full desktop app or unpublished code and design resources.
 
-PixelCrab is built on [OpenCode](https://github.com/anomalyco/opencode). Upstream projects retain their own licenses and attribution; their source is not included in this initial foundation batch.
+PixelCrab is built on [OpenCode](https://github.com/anomalyco/opencode). Upstream projects retain their own licenses and attribution; the vendored OpenCode snapshot retains its original copyright and license.
 
 <div align="center">
 
