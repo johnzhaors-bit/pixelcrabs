@@ -176,6 +176,10 @@ node --test packages/local-runtime/test/public-preview-core.test.mjs packages/lo
 
 The registry describes capabilities; the static CLI provides one executable preview path. These modules do not execute deployments, enforce operating-system permissions or provide a desktop UI. The host remains responsible for project authorization and integrated runtime management. More modules will arrive in reviewed batches.
 
+## Evidence modules
+
+The reviewed `upstream/opencode/packages/app/src/pixelcrab/` modules now include structured text/image attachments, visual change drafts and task-completion recheck state. They use the original OpenCode conversation rather than a second model loop. Missing target values or an unrelated evidence ID cannot pass a visual change check. These are reusable modules; the complete public session panel and real model round trip are still being integrated.
+
 ## Follow along
 
 Try the desktop app, explore the [product](https://pixelcrabs.com/en/about/), and watch this repository for the next source modules. You can [report a problem or share a use case](https://github.com/johnzhaors-bit/pixelcrabs/issues). Please include the platform, app version and steps to reproduce, and leave out credentials or private project content.
