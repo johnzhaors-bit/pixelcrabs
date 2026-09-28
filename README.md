@@ -75,7 +75,7 @@ We are preparing the public Web edition in small, verifiable steps. The status c
 | Separate shared preview contracts and Web capability registration | Published in this repository with tests |
 | Extract the static Web preview launch recipe | Implemented; isolated HTTP checks pass with Node |
 | Separate Web discovery, managed Node and owned process lifecycle | Published with independent tests; real framework execution remains to be verified |
-| Connect Agent tools to preview management | In progress |
+| Connect Agent tools to preview management | Preview plugin available; desktop presentation still in progress |
 | Separate visual workbench and generic network integration | Planned |
 | Add an independent desktop identity and build configuration | Planned |
 | Complete dependency/license review and a clean Web workflow build | Required before the first source release |
@@ -133,7 +133,23 @@ The shared Web modules now expose `discoverWebProject(directory)` and `createWeb
 
 The manager owns its child processes, verifies listener ownership, scopes runtimes to a conversation, routes local HTTP/HMR through a runtime gateway and recovers resources on stop or project switch. It uses the current executable for the managed Node shim; an Electron host uses Electron's Node mode. It does not install system Node. Windows ownership checks use PowerShell; macOS/Linux require `lsof`. These are trusted development tools, not a sandbox for untrusted projects.
 
-Independent tests cover static startup, reuse, project switching, cross-conversation rejection, cancellation and cleanup. A running process does not establish that a desktop panel has displayed the right page. The Agent tool, visual panel, generic network integration and full desktop build remain in preparation.
+Independent tests cover static startup, reuse, project switching, cross-conversation rejection, cancellation and cleanup. A running process does not establish that a desktop panel has displayed the right page. The native Agent plugin is available below. The visual panel, generic network integration and full desktop build remain in preparation.
+
+## Connect the native OpenCode preview tool
+
+Install the pinned plugin API dependency with Bun 1.3.14:
+
+```sh
+cd packages/local-runtime
+bun install --frozen-lockfile --ignore-scripts
+bun test test/web-preview-plugin.test.ts
+```
+
+Add the absolute file URL of `packages/local-runtime/src/web-preview-plugin.ts` to the `plugin` array in your project's OpenCode configuration. Merge it with your existing configuration; do not replace your providers or permissions. For example, on Windows the URL is `file:///C:/src/pixelcrabs/packages/local-runtime/src/web-preview-plugin.ts`, and on macOS/Linux `file:///home/you/pixelcrabs/packages/local-runtime/src/web-preview-plugin.ts`.
+
+After restarting OpenCode, ask the Agent to discover the current project and start a Web preview with `pixelcrabs_preview`. It exposes discover, start, verify, list, logs and stop; starting a process uses native permission checks. External project directories require a separate native permission. Runtime IDs are scoped to the conversation. The plugin returns a local URL and process evidence; this batch does not yet display the page in a PixelCrabs desktop panel. Code changes still use OpenCode's own editing tools.
+
+The plugin depends only on the reviewed runtime and OpenCode's MIT plugin API. It does not connect to PixelCrab account, billing, marketplace or publishing services. Normal engine disposal or deleting the session releases its previews. Framework dependencies must still be prepared through the project's own package manager and the normal OpenCode permission flow.
 
 ## Run the foundation tests
 

@@ -26,6 +26,12 @@ jobs:
           node-version: 24
       - name: Test public Web discovery, owned processes and gateway
         run: node --test packages/local-runtime/test/public-preview-core.test.mjs packages/local-runtime/test/public-static-preview.test.mjs packages/local-runtime/test/public-web-project.test.mjs packages/local-runtime/test/public-web-runtime.test.mjs packages/local-runtime/test/public-preview-gateway.test.mjs
+      - name: Install pinned native plugin API
+        working-directory: packages/local-runtime
+        run: bun install --frozen-lockfile --ignore-scripts
+      - name: Verify native preview tool permissions and lifecycle
+        working-directory: packages/local-runtime
+        run: bun test test/web-preview-plugin.test.ts
       - name: Install official locked dependencies
         working-directory: upstream/opencode
         run: bun install --frozen-lockfile
