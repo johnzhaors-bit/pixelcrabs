@@ -89,7 +89,7 @@ The contract and capability modules and a standalone static HTML preview are pub
 
 ## Run the OpenCode engine
 
-The [`upstream/opencode`](upstream/opencode) directory contains the official OpenCode source at [commit `9f69463f1d`](https://github.com/anomalyco/opencode/commit/9f69463f1d556af2b5b51d2efa1c04f5f544f911). It is an upstream snapshot, not a copy of the customized private PixelCrab source. Its original [MIT license](upstream/opencode/LICENSE), notices, lockfile and development documentation are preserved.
+The [`upstream/opencode`](upstream/opencode) directory is based on official OpenCode [commit `9f69463f1d`](https://github.com/anomalyco/opencode/commit/9f69463f1d556af2b5b51d2efa1c04f5f544f911). It is an upstream snapshot, not a copy of the customized private PixelCrab source. Its original [MIT license](upstream/opencode/LICENSE), notices, lockfile and development documentation are preserved. One recorder test fixture is locally patched to construct a synthetic Google-key-shaped value instead of storing the original key-shaped literal. CI checks this fixture and rejects Google API key literals in tracked files; this targeted check complements GitHub secret scanning.
 
 The [foundation smoke workflow](https://github.com/johnzhaors-bit/pixelcrabs/actions/workflows/opencode-smoke.yml) checks dependency installation, CLI startup and a local API health request on Linux. Full PixelCrabs desktop and model-call validation remain separate. Native dependencies also require a working compiler toolchain and Python; Windows setup has not yet passed our clean-install check.
 
