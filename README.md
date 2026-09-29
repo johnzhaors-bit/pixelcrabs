@@ -78,7 +78,7 @@ We are preparing the public Web edition in small, verifiable steps. The status c
 | Connect Agent tools to preview management | Built-in preview plugin and desktop presentation connected |
 | Separate native preview host and visual workbench | Draft/existing session panels connected; native draft and screenshot smoke passed |
 | Generic network integration | Published: standard HTTPS providers and remote MCP use Electron system networking; custom transports/child processes retain their own behavior |
-| Add an independent desktop identity and build configuration | Planned |
+| Add an independent desktop identity and build configuration | Isolated IDs/data roots and packaging configuration; automatic updates disabled pending a public release feed |
 | Complete dependency/license review and a clean Web workflow build | Required before the first source release |
 | Publish source and license incrementally | Reviewed modules under MIT; experimental desktop build instructions below |
 | Add Flutter capabilities | After the Web release |
@@ -200,7 +200,9 @@ bun x --no-install electron-vite preview
 
 This uses the embedded Node sidecar (leave `OPENCODE_SIDECAR_V2` unset). Open a project, use your normal OpenCode provider and ask the Agent to discover and start a preview with `pixelcrabs_preview`. The Web Preview panel is also available in a new-session draft; an HTTP/HTTPS address can be opened manually. Point/region evidence and multi-selection targets are added to the composer for you to review and send. The panel never edits project files itself.
 
-The development UI currently retains upstream branding and identity. Do not publish installers from it yet: independent branding/update configuration and real-model end-to-end acceptance are still pending. Windows Git checkouts that materialize the upstream `custom-elements.d.ts` symlink as plain text need a portable typecheck fix; this does not prevent the tested desktop bundle build.
+The native application is named **PixelCrabs Open**, with separate dev/beta/prod app IDs under `com.pixelcrabs.open`. Desktop settings and engine XDG data/config/cache/state live under that app's own user-data directory; no automatic import of OpenCode desktop settings is performed. Project-local OpenCode configuration remains supported. Only the audited embedded engine is enabled; the upstream experimental background CLI mode is disabled. The independent `pixelcrabs-open://` scheme is normalized into the original renderer's internal deep-link format.
+
+Packaging uses a separate `0.1.0-preview.1` version and `PixelCrabs-Open` artifact names. It has no automatic update feed, upstream signing script or legacy Linux launcher migration. Updates are disabled even in packaged beta/prod builds. Source builds still contain upstream visual branding/icons; installer signing, platform installation tests and real-model end-to-end acceptance remain pending. Do not treat this developer preview as a finished installer release. Windows Git checkouts that materialize the upstream `custom-elements.d.ts` symlink as plain text need a portable typecheck fix; this does not prevent the tested desktop bundle build.
 
 After building, the isolated desktop smoke can be run with Electron and `scripts/test-desktop-session.cjs` from the repository root. It creates temporary application/project state and closes its own app when finished. Check `.tmp/full-desktop-smoke-result.json`; a launcher exit code alone is not acceptance. No model call is made by that test.
 

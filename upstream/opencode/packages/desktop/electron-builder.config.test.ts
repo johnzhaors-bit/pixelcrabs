@@ -1,91 +1,49 @@
 import { expect, test } from "bun:test"
-import type { Configuration } from "electron-builder"
+import { readFileSync } from "node:fs"
+import { createUpdaterController } from "./src/main/updater-controller"
 
-const legacyDesktopEntry = "resources/linux/opencode-desktop.desktop"
-
-const channels = [
-  { channel: "dev", appId: "ai.opencode.desktop.dev" },
-  { channel: "beta", appId: "ai.opencode.desktop.beta" },
-  { channel: "prod", appId: "ai.opencode.desktop" },
-] as const
-
-for (const channel of channels) {
-  test(`uses one Linux desktop identity for ${channel.channel}`, async () => {
-    const previous = process.env.OPENCODE_CHANNEL
-    process.env.OPENCODE_CHANNEL = channel.channel
-
-    const module = await import(`./electron-builder.config.ts?channel=${channel.channel}`)
-    const config = module.default as Configuration
-
-    if (previous === undefined) delete process.env.OPENCODE_CHANNEL
-    else process.env.OPENCODE_CHANNEL = previous
-
-    expect(config.appId).toBe(channel.appId)
-    expect(config.extraMetadata?.desktopName).toBe(`${channel.appId}.desktop`)
-    expect(config.linux?.executableName).toBe(channel.appId)
-    expect(config.linux?.desktop?.entry?.StartupWMClass).toBe(channel.appId)
-    expect(config.deb?.fpm).toContainEqual(expect.stringContaining(`/usr/share/metainfo/${channel.appId}.metainfo.xml`))
-    expect(config.rpm?.fpm).toContainEqual(expect.stringContaining(`/usr/share/metainfo/${channel.appId}.metainfo.xml`))
-  })
-}
-
-test("keeps a hidden prod launcher for old Linux pins", async () => {
-  const previous = process.env.OPENCODE_CHANNEL
-  process.env.OPENCODE_CHANNEL = "prod"
-
-  const module = await import("./electron-builder.config.ts?compat=prod")
-  const config = module.default as Configuration
-
-  if (previous === undefined) delete process.env.OPENCODE_CHANNEL
-  else process.env.OPENCODE_CHANNEL = previous
-
-  expect(
-    config.deb?.fpm?.some((entry) =>
-      entry.endsWith("opencode-desktop.desktop=/usr/share/applications/opencode-desktop.desktop"),
-    ),
-  ).toBe(true)
-  expect(
-    config.rpm?.fpm?.some((entry) =>
-      entry.endsWith("opencode-desktop.desktop=/usr/share/applications/opencode-desktop.desktop"),
-    ),
-  ).toBe(true)
-
-  const desktop = await Bun.file(legacyDesktopEntry).text()
-  expect(desktop).toContain("Exec=/opt/OpenCode/ai.opencode.desktop %U")
-  expect(desktop).toContain("Icon=ai.opencode.desktop")
-  expect(desktop).toContain("StartupWMClass=ai.opencode.desktop")
-  expect(desktop).toContain("NoDisplay=true")
-})
-
-test("bundles the CLI outside the dev app archive", async () => {
-  const previous = process.env.OPENCODE_CHANNEL
-  process.env.OPENCODE_CHANNEL = "dev"
-  const module = await import("./electron-builder.config.ts?cli-resource")
-  const config = module.default as Configuration
-  if (previous === undefined) delete process.env.OPENCODE_CHANNEL
-  else process.env.OPENCODE_CHANNEL = previous
-
-  expect(config.files).toContain("!resources/opencode-cli*")
-  expect(config.extraResources).toContainEqual({
-    from: "resources/",
-    to: "",
-    filter: ["opencode-cli*"],
-  })
-})
-
-for (const channel of ["beta", "prod"] as const) {
-  test(`does not bundle the CLI in ${channel} builds`, async () => {
+for (const channel of ["dev", "beta", "prod"] as const) {
+  test(`public ${channel} cannot overwrite another distribution or publish its updates`, async () => {
     const previous = process.env.OPENCODE_CHANNEL
     process.env.OPENCODE_CHANNEL = channel
-    const module = await import(`./electron-builder.config.ts?no-cli-resource=${channel}`)
-    const config = module.default as Configuration
-    if (previous === undefined) delete process.env.OPENCODE_CHANNEL
-    else process.env.OPENCODE_CHANNEL = previous
-
-    expect(config.extraResources).not.toContainEqual({
-      from: "resources/",
-      to: "",
-      filter: ["opencode-cli*"],
-    })
+    try {
+      const { default: config } = await import(`./electron-builder.config.ts?channel=${channel}`)
+      const id = `com.pixelcrabs.open${channel === "prod" ? "" : `.${channel}`}`
+      expect(config.appId).toBe(id)
+      expect(config.extraMetadata.desktopName).toBe(`${id}.desktop`)
+      expect(config.linux.executableName).toBe(id)
+      expect(config.linux.desktop.entry.StartupWMClass).toBe(id)
+      expect(config.publish).toBeNull()
+      expect(config.protocols.schemes).toEqual(["pixelcrabs-open"])
+      expect(config.extraResources).toHaveLength(1)
+      expect(JSON.stringify(config)).not.toContain("anomalyco")
+      expect(config.win.signtoolOptions).toBeUndefined()
+    } finally {
+      if (previous === undefined) delete process.env.OPENCODE_CHANNEL
+      else process.env.OPENCODE_CHANNEL = previous
+    }
   })
 }
+
+test("disabled updates never access a backend or install a stale update", async () => {
+  const unexpected = () => { throw Error("Disabled updater accessed backend or persistence") }
+  const controller = createUpdaterController({
+    enabled: false, currentVersion: "0.1.0-preview.1",
+    backend: { checkForUpdates: unexpected, downloadUpdate: unexpected, quitAndInstall: unexpected },
+    persistence: { get: () => ({ version: "9.9.9" }), set: unexpected, clear: () => {} }, stop: unexpected,
+  })
+  await controller.start()
+  expect((await controller.check()).status).toBe("disabled")
+  await expect(controller.install()).rejects.toThrow("Update is not ready to install")
+})
+
+test("public desktop startup isolates data and never claims the upstream protocol", () => {
+  const main = readFileSync(new URL("./src/main/index.ts", import.meta.url), "utf8")
+  expect(main).not.toContain('from "./migrate"')
+  expect(main).not.toContain('"ai.opencode.desktop')
+  expect(main).not.toContain('setAsDefaultProtocolClient("opencode")')
+  expect(main).toContain('join(app.getPath("userData"), "engine", kind.toLowerCase())')
+  expect(main).toContain('const SIDECAR_VERSION: string = "v1"')
+  const constants = readFileSync(new URL("./src/main/constants.ts", import.meta.url), "utf8")
+  expect(constants).toContain("UPDATER_ENABLED = false")
+})

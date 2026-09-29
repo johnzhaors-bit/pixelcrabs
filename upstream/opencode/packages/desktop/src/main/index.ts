@@ -46,23 +46,22 @@ import {
 import { createWslServersController } from "./wsl/servers"
 import { registerWslIpcHandlers } from "./wsl/ipc"
 import { spawnWslSidecar } from "./wsl/sidecar"
-import { migrate } from "./migrate"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
 import { setNativeTranslations } from "./native-translations"
 
 const APP_NAMES: Record<string, string> = {
-  dev: "OpenCode Dev",
-  beta: "OpenCode Beta",
-  prod: "OpenCode",
+  dev: "PixelCrabs Open Dev",
+  beta: "PixelCrabs Open Beta",
+  prod: "PixelCrabs Open",
 }
 const APP_IDS: Record<string, string> = {
-  dev: "ai.opencode.desktop.dev",
-  beta: "ai.opencode.desktop.beta",
-  prod: "ai.opencode.desktop",
+  dev: "com.pixelcrabs.open.dev",
+  beta: "com.pixelcrabs.open.beta",
+  prod: "com.pixelcrabs.open",
 }
 const TEST_ONBOARDING = process.env.OPENCODE_TEST_ONBOARDING === "1"
-const SIDECAR_VERSION = process.env.OPENCODE_SIDECAR_V2 === "1" ? "v2" : "v1"
+const SIDECAR_VERSION: string = "v1" // Public builds use the audited embedded engine.
 const jsCallStackFeature = "DocumentPolicyIncludeJSCallStacksInCrashReports"
 
 let logger: ReturnType<typeof initLogging>
@@ -80,6 +79,9 @@ function useEnvProxy() {
 }
 
 function emitDeepLinks(urls: string[]) {
+  // Normalize only our OS protocol to the original renderer's internal format.
+  urls = urls.filter(url => url.startsWith("pixelcrabs-open://"))
+    .map(url => "opencode://" + url.slice("pixelcrabs-open://".length))
   if (urls.length === 0) return
   pendingDeepLinks.push(...urls)
   const win = getLastFocusedWindow()
@@ -123,7 +125,7 @@ const main = Effect.gen(function* () {
 
   process.env.OPENCODE_DISABLE_EMBEDDED_WEB_UI = "true"
 
-  const appId = app.isPackaged ? APP_IDS[CHANNEL] : "ai.opencode.desktop.dev"
+  const appId = app.isPackaged ? APP_IDS[CHANNEL] : "com.pixelcrabs.open.dev"
   const onboardingTestRoot = ((): string | undefined => {
     if (!TEST_ONBOARDING) return
 
@@ -139,7 +141,7 @@ const main = Effect.gen(function* () {
     process.env.XDG_STATE_HOME = join(root, "state")
     return root
   })()
-  app.setName(app.isPackaged ? APP_NAMES[CHANNEL] : "OpenCode Dev")
+  app.setName(app.isPackaged ? APP_NAMES[CHANNEL] : "PixelCrabs Open Dev")
   app.setAppUserModelId(appId)
   app.setPath(
     "userData",
@@ -202,9 +204,15 @@ const main = Effect.gen(function* () {
   }
 
   const shellEnv = preferAppEnv(app.getPath("userData"))
+  // Keep desktop engine credentials, sessions and caches in this distribution.
+  // Project-local OpenCode configuration remains supported.
+  for (const kind of ["DATA", "CONFIG", "CACHE", "STATE"]) {
+    process.env[`XDG_${kind}_HOME`] = join(app.getPath("userData"), "engine", kind.toLowerCase())
+  }
+  process.env.OPENCODE_DISABLE_AUTOUPDATE = "true"
 
   app.on("second-instance", (_event: Event, argv: string[]) => {
-    const urls = argv.filter((arg: string) => arg.startsWith("opencode://"))
+    const urls = argv.filter((arg: string) => arg.startsWith("pixelcrabs-open://"))
     if (urls.length) {
       logger.log("deep link received via second-instance", { urls })
       emitDeepLinks(urls)
@@ -255,7 +263,7 @@ const main = Effect.gen(function* () {
 
   yield* Effect.promise(() => app.whenReady())
 
-  if (!TEST_ONBOARDING) migrate()
+  // Public builds never import another distribution's desktop settings.
   yield* Effect.promise(() => cleanupStoreFiles(app.getPath("userData"))).pipe(
     Effect.tap((result) =>
       Effect.sync(() => {
@@ -269,7 +277,7 @@ const main = Effect.gen(function* () {
       }),
     ),
   )
-  app.setAsDefaultProtocolClient("opencode")
+  app.setAsDefaultProtocolClient("pixelcrabs-open")
   registerRendererProtocol()
   registerWebPreviewIPC({ openExternal: (value) => {
     const url = new URL(value)
