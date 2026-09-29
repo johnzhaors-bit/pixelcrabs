@@ -50,7 +50,7 @@ Local-first does not mean every model request is offline. When you choose an onl
 
 ## Open-source edition: first modules available
 
-This repository is the home of the **Web-focused open-source edition**. The OpenCode source baseline and the first preview contract and capability registration modules are available here under their MIT licenses. The upstream coding engine and an experimental Web Preview desktop integration now build from this repository. It is a developer preview, not the finished independently branded distribution. The full desktop download is available now; it includes capabilities beyond the planned public edition.
+This repository is the home of the **Web-focused open-source edition**. The OpenCode source baseline and the first preview contract and capability registration modules are available here under their MIT licenses. The upstream coding engine and an experimental Web Preview desktop integration now build from this repository. This is a source-only project for studying, modifying and running the Web-focused code yourself. We do not distribute a separate open-source installer. For the ready-to-use full product, download the desktop app from our website.
 
 | Area | Planned public scope |
 | --- | --- |
@@ -62,7 +62,7 @@ This repository is the home of the **Web-focused open-source edition**. The Open
 
 PixelCrab account services, platform model billing, cloud hosting, marketplace publishing and dedicated mini app preview/publishing integrations are outside the public source scope. Design packs and other third-party resources have their own distribution and licensing requirements.
 
-We publish each module after reviewing its source boundary and verifying it independently. A complete desktop release will follow once the Web workflow builds and runs without private modules. Forking this repository gives you the upstream coding engine source and the foundation modules below. The preview panel is connected to the native engine and composer. Generic system networking, local static export and native dependency preparation are published. Independent distribution and complete model-edit/recheck acceptance remain in progress.
+We publish each module after reviewing its source boundary and verifying it independently. Ready-to-use installers are provided only through the full product website. Forking this repository gives you the upstream coding engine source and the foundation modules below. The preview panel is connected to the native engine and composer. Generic system networking, local static export and native dependency preparation are published. Windows source builds and basic desktop preview/evidence checks, plus Linux CI, have passed. The complete real-model edit/recheck workflow has not yet been verified.
 
 ## Development roadmap
 
@@ -78,8 +78,8 @@ We are preparing the public Web edition in small, verifiable steps. The status c
 | Connect Agent tools to preview management | Built-in preview plugin and desktop presentation connected |
 | Separate native preview host and visual workbench | Draft/existing session panels connected; native draft and screenshot smoke passed |
 | Generic network integration | Published: standard HTTPS providers and remote MCP use Electron system networking; custom transports/child processes retain their own behavior |
-| Add an independent desktop identity and build configuration | Isolated IDs/data roots and packaging configuration; automatic updates disabled pending a public release feed |
-| Complete dependency/license review and a clean Web workflow build | Required before the first source release |
+| Add an independent desktop identity and build configuration | Isolated IDs/data roots and packaging configuration; automatic updates disabled; no separate public installer planned |
+| Complete dependency/license review and a clean Web workflow build | Reviewed modules and clean builds published; review continues for future additions |
 | Publish source and license incrementally | Reviewed modules under MIT; experimental desktop build instructions below |
 | Add Flutter capabilities | After the Web release |
 
@@ -202,7 +202,7 @@ This uses the embedded Node sidecar (leave `OPENCODE_SIDECAR_V2` unset). Open a 
 
 The native application is named **PixelCrabs Open**, with separate dev/beta/prod app IDs under `com.pixelcrabs.open`. Desktop settings and engine XDG data/config/cache/state live under that app's own user-data directory; no automatic import of OpenCode desktop settings is performed. Project-local OpenCode configuration remains supported. Only the audited embedded engine is enabled; the upstream experimental background CLI mode is disabled. The independent `pixelcrabs-open://` scheme is normalized into the original renderer's internal deep-link format.
 
-Packaging uses a separate `0.1.0-preview.1` version and `PixelCrabs-Open` artifact names. It has no automatic update feed, upstream signing script or legacy Linux launcher migration. Updates are disabled even in packaged beta/prod builds. The main logo, splash, native icons and window title use PixelCrabs Open branding. Original OpenCode provider names, technical references and license notices remain intact. Installer signing, platform installation tests and real-model end-to-end acceptance remain pending. Do not treat this developer preview as a finished installer release. Windows Git checkouts that materialize the upstream `custom-elements.d.ts` symlink as plain text need a portable typecheck fix; this does not prevent the tested desktop bundle build.
+Packaging uses a separate `0.1.0-preview.1` version and `PixelCrabs-Open` artifact names. It has no automatic update feed, upstream signing script or legacy Linux launcher migration. Updates are disabled even in packaged beta/prod builds. The main logo, splash, native icons and window title use PixelCrabs Open branding. Original OpenCode provider names, technical references and license notices remain intact. Installer signing and installation testing are outside this source-only project scope. The complete real-model workflow is not yet verified. Use the website download for the ready-to-use full product. Windows Git checkouts that materialize the upstream `custom-elements.d.ts` symlink as plain text need a portable typecheck fix; this does not prevent the tested desktop bundle build.
 
 After building, the isolated desktop smoke can be run with Electron and `scripts/test-desktop-session.cjs` from the repository root. It creates temporary application/project state and closes its own app when finished. Check `.tmp/full-desktop-smoke-result.json`; a launcher exit code alone is not acceptance. No model call is made by that test.
 
