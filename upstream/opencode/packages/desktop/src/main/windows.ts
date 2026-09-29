@@ -86,7 +86,7 @@ export function getBackgroundColor(): string | undefined {
 }
 
 function iconsDir() {
-  return app.isPackaged ? join(process.resourcesPath, "icons") : join(root, "../../resources/icons")
+  return app.isPackaged ? join(app.getAppPath(), "resources", "icons") : join(root, "../../resources/icons")
 }
 
 function iconPath() {
@@ -180,7 +180,7 @@ export function createMainWindow(id: string = randomUUID()) {
     height: state.height,
     show: false,
     autoHideMenuBar: true,
-    title: "OpenCode",
+    title: app.getName(),
     icon: iconPath(),
     backgroundColor: backgroundColor ?? defaultBackgroundColor(),
     ...(process.platform === "darwin"

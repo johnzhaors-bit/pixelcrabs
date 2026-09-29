@@ -55,7 +55,9 @@ jobs:
         run: bun test test/record-replay.test.ts --test-name-pattern 'detects secret-looking values without returning the secret'
       - name: Verify public distribution isolation and disabled updater
         working-directory: upstream/opencode/packages/desktop
-        run: bun test electron-builder.config.test.ts
+        run: |
+          bun ./scripts/copy-icons.ts
+          bun test electron-builder.config.test.ts src/renderer/html.test.ts
       - name: Build the embedded public engine
         working-directory: upstream/opencode/packages/opencode
         env:

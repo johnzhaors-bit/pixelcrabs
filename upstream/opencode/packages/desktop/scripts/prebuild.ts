@@ -1,11 +1,8 @@
-#!/usr/bin/env bun
 import { $ } from "bun"
+import { dirname, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 
-import { downloadCliToResources, resolveChannel } from "./utils"
-
-const channel = resolveChannel()
-await $`bun ./scripts/copy-icons.ts ${channel}`
-await $`bun ./scripts/copy-metainfo.ts ${channel}`
-
-await $`cd ../opencode && bun script/build-node.ts`
-if (channel === "dev") await downloadCliToResources()
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
+// The public desktop uses its embedded source engine; no upstream CLI download.
+await $`bun ./scripts/copy-icons.ts`.cwd(root)
+await $`bun script/build-node.ts`.cwd(resolve(root, "../opencode"))
