@@ -1,3 +1,4 @@
+import { SystemNetworkRuntime } from "../pixelcrab/system-network-runtime"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import os from "os"
 import { ConfigV1 } from "@opencode-ai/core/v1/config/config"
@@ -544,7 +545,7 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
             const headers = new Headers(init?.headers)
             headers.set("Authorization", `Bearer ${token.token}`)
 
-            return fetch(input, { ...init, headers })
+            return SystemNetworkRuntime.networkFetch(input, { ...init, headers })
           },
         },
         async getModel(sdk: any, modelID: string) {
@@ -950,7 +951,7 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
             } catch {}
           }
 
-          const response = await fetch(url, init)
+          const response = await SystemNetworkRuntime.networkFetch(url, init)
 
           if (!response.ok && response.status === 400) {
             try {
@@ -1798,7 +1799,7 @@ const layer = Layer.effect(
         delete options["headerTimeout"]
 
         options["fetch"] = async (input: any, init?: BunFetchRequestInit) => {
-          const fetchFn = customFetch ?? fetch
+          const fetchFn = customFetch ?? SystemNetworkRuntime.networkFetch
           const opts = init ?? {}
           const chunkAbortCtl = typeof chunkTimeout === "number" && chunkTimeout > 0 ? new AbortController() : undefined
           const headerTimeoutMs = headerTimeout === false ? undefined : headerTimeout

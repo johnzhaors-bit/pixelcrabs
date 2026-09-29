@@ -1,3 +1,4 @@
+import { startWebNetwork } from "../pixelcrab/web-network-service"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { app, utilityProcess } from "electron"
@@ -61,9 +62,10 @@ export async function spawnLocalServer(
   options: SpawnLocalServerOptions,
 ) {
   const sidecar = join(dirname(fileURLToPath(import.meta.url)), "sidecar.js")
+  const networkBridgeURL = await startWebNetwork()
   const child = utilityProcess.fork(sidecar, [], {
     cwd: process.cwd(),
-    env: createSidecarEnv(),
+    env: { ...createSidecarEnv(), PIXELCRAB_NETWORK_BRIDGE_URL: networkBridgeURL },
     serviceName: SIDECAR_SERVICE_NAME,
     stdio: "pipe",
   })

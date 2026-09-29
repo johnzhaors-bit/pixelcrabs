@@ -1,0 +1,10 @@
+{
+  "name": "@pixelcrabs/system-network",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    "./bridge": "./src/system-network-bridge.ts"
+  }
+}

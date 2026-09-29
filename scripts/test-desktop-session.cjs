@@ -1,7 +1,7 @@
 const { app, BrowserWindow } = require('electron')
 const fs = require('node:fs/promises')
+const fsSync = require('node:fs')
 const path = require('node:path')
-const { pathToFileURL } = require('node:url')
 const { createServer } = require('node:http')
 const assert = require('node:assert/strict')
 const outputDirectory = path.join(__dirname, '../.tmp')
@@ -15,8 +15,8 @@ async function until(check, label, ms=45000) {
 let server, win
 const deadline=setTimeout(()=>{void fs.writeFile(resultPath, JSON.stringify({passed:false,error:'Overall timeout'})).then(()=>app.exit(1))},120000)
 ;(async()=>{
-  await fs.mkdir(outputDirectory, {recursive:true})
-  const docs=await fs.mkdtemp(path.join(outputDirectory,'desktop-docs-'))
+  fsSync.mkdirSync(outputDirectory, {recursive:true})
+  const docs=fsSync.mkdtempSync(path.join(outputDirectory,'desktop-docs-'))
   app.setPath('documents',docs)
   process.env.OPENCODE_TEST_ONBOARDING='1'
   process.env.OPENCODE_SIDECAR_V2='0'
@@ -25,7 +25,7 @@ const deadline=setTimeout(()=>{void fs.writeFile(resultPath, JSON.stringify({pas
   process.env.OPENCODE_DISABLE_PROJECT_CONFIG='true'
   process.env.OPENCODE_DISABLE_AUTOUPDATE='true'
   for(const key of ['HTTP_PROXY','HTTPS_PROXY','ALL_PROXY','http_proxy','https_proxy','all_proxy']) delete process.env[key]
-  await import(pathToFileURL(path.join(__dirname,'../upstream/opencode/packages/desktop/out/main/index.js')).href)
+  require(path.join(__dirname,'../upstream/opencode/packages/desktop/out/main/index.js'))
   win=await until(()=>BrowserWindow.getAllWindows().find(w=>!w.isDestroyed()),'desktop window')
   await until(()=>win.webContents.executeJavaScript(`!!document.querySelector('[aria-label="Preview URL"]')`).catch(()=>false),'session preview panel')
   const available=await win.webContents.executeJavaScript('typeof window.api.pixelcrabPreview.show === "function"')

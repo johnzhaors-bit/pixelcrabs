@@ -2,7 +2,7 @@ name: OpenCode foundation smoke
 on:
   push:
     branches: [main]
-    paths: ["upstream/opencode/**", "packages/local-runtime/**", "scripts/check-google-key-literals.py", ".github/workflows/opencode-smoke.yml"]
+    paths: ["upstream/opencode/**", "packages/local-runtime/**", "packages/platform-desktop/**", "scripts/check-google-key-literals.py", ".github/workflows/opencode-smoke.yml"]
   workflow_dispatch:
 permissions:
   contents: read
@@ -26,6 +26,10 @@ jobs:
           node-version: 24
       - name: Test public Web discovery, owned processes and gateway
         run: node --test packages/local-runtime/test/public-preview-core.test.mjs packages/local-runtime/test/public-static-preview.test.mjs packages/local-runtime/test/public-web-project.test.mjs packages/local-runtime/test/public-web-runtime.test.mjs packages/local-runtime/test/public-preview-gateway.test.mjs
+      - name: Test generic network transport and engine routing
+        run: |
+          node --test packages/platform-desktop/test/system-network-bridge.test.mjs
+          bun test upstream/opencode/packages/opencode/test/pixelcrab/system-network-runtime.test.ts
       - name: Test independent Web presentation domain
         run: node --test upstream/opencode/packages/desktop/src/pixelcrab/public-web-preview-domain.test.mjs
       - name: Verify a real Vite project and process cleanup

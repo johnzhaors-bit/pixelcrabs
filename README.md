@@ -223,3 +223,9 @@ PixelCrab is built on [OpenCode](https://github.com/anomalyco/opencode). Upstrea
 The real Vite integration test installs a pinned Vite version in a fresh temporary directory, verifies transformed and updated source through the preview gateway, and checks process ownership and shutdown. Run `node --test packages/local-runtime/test/public-vite-runtime.mjs` with Bun 1.3.14 on PATH (or set `PIXELCRABS_TEST_BUN` to its absolute executable). It requires registry access and does not replace a real-model desktop editing acceptance test.
 
 Provider availability and free-tier eligibility are controlled by each provider. An OpenCode-compatible API or model catalog entry does not guarantee that a provider permits its free tier in a derived desktop client. Use your own supported provider configuration for end-to-end editing tests; this project does not bypass provider client restrictions.
+
+### System networking
+
+The public desktop establishes a process-scoped loopback transport before starting its embedded engine. Standard HTTPS provider requests and remote HTTP/SSE MCP requests use Electron's Chromium transport and its system proxy/PAC policy, independently of account state. Loopback model endpoints stay direct. Custom provider fetch implementations retain their own transport; arbitrary child processes and package managers are not automatically routed through Electron. The current bridge does not proxy plain HTTP destinations.
+
+The shared module contains no hosted service URLs, marketplace routing or account implementation. A failed write is not automatically replayed and a proxy failure does not force direct access. Windows tests cover Chromium direct → test proxy → direct with streaming responses; platform-specific enterprise proxy authentication and production PAC deployment still require real-machine validation.

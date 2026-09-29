@@ -1,3 +1,4 @@
+import { SystemNetworkRuntime } from "../pixelcrab/system-network-runtime"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
@@ -270,6 +271,7 @@ const layer = Layer.effect(
         {
           name: "StreamableHTTP",
           transport: new StreamableHTTPClientTransport(url, {
+            fetch: SystemNetworkRuntime.networkFetch,
             authProvider,
             requestInit: mcp.headers ? { headers: mcp.headers } : undefined,
           }),
@@ -277,6 +279,7 @@ const layer = Layer.effect(
         {
           name: "SSE",
           transport: new SSEClientTransport(url, {
+            fetch: SystemNetworkRuntime.networkFetch,
             authProvider,
             requestInit: mcp.headers ? { headers: mcp.headers } : undefined,
           }),
@@ -844,6 +847,7 @@ const layer = Layer.effect(
       )
 
       const transport = new StreamableHTTPClientTransport(url, {
+            fetch: SystemNetworkRuntime.networkFetch,
         authProvider,
         requestInit: mcpConfig.headers ? { headers: mcpConfig.headers } : undefined,
       })
