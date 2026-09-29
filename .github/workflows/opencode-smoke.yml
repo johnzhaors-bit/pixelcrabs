@@ -39,6 +39,10 @@ jobs:
       - name: Install pinned native plugin API
         working-directory: packages/local-runtime
         run: bun install --frozen-lockfile --ignore-scripts
+      - name: Verify managed pnpm integrity and real dependency preparation
+        run: |
+          bun test packages/local-runtime/test/managed-web-package.test.ts
+          node --test packages/local-runtime/test/public-managed-package.mjs
       - name: Verify native preview tool permissions and lifecycle
         working-directory: packages/local-runtime
         run: bun test test/web-preview-plugin.test.ts

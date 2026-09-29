@@ -20,6 +20,7 @@
     "./plugin": "./src/web-preview-plugin.ts"
   },
   "dependencies": {
-    "@opencode-ai/plugin": "1.18.25"
+    "@opencode-ai/plugin": "1.18.25",
+    "tar": "7.5.22"
   }
 }
