@@ -64,6 +64,7 @@ export function experimentalWebSocketsEnabled(input: { enabled: boolean; channel
 }
 
 import { WebPreviewPlugin } from "../../../../../../packages/local-runtime/src/web-preview-plugin"
+import { SystemNetworkRuntime } from "../pixelcrab/system-network-runtime"
 
 // Built-in plugins that are directly imported (not installed from npm)
 function internalPlugins(flags: RuntimeFlags.Info): PluginInstance[] {
@@ -73,7 +74,7 @@ function internalPlugins(flags: RuntimeFlags.Info): PluginInstance[] {
       CodexAuthPlugin(input, {
         experimentalWebSockets: experimentalWebSocketsEnabled({ enabled: flags.experimentalWebSockets }),
       }),
-    WebPreviewPlugin,
+    (input) => WebPreviewPlugin(input, { fetchImpl: SystemNetworkRuntime.networkFetch }),
     CopilotAuthPlugin,
     ModalPlugin,
     GitlabAuthPlugin,

@@ -5,6 +5,25 @@ import path from "node:path"
 import type { ToolContext } from "@opencode-ai/plugin/tool"
 import { WebPreviewPlugin } from "../src/web-preview-plugin"
 
+test("preparation remains permission-gated and static pages do not download tools", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pixelcrabs-plugin-"))
+  let downloads = 0
+  const hooks = await WebPreviewPlugin(undefined, { cacheDirectory: path.join(root, "cache"), fetchImpl: (async () => { downloads++; throw new Error("No download expected") }) as typeof fetch })
+  const context: ToolContext = { sessionID: "setup", messageID: "m", agent: "build", directory: root, worktree: root, abort: new AbortController().signal, metadata() {}, async ask() {} }
+  try {
+    await expect(hooks.tool.pixelcrabs_prepare_web.execute({}, { ...context, async ask() { throw new Error("Setup denied") } })).rejects.toThrow("Setup denied")
+    await expect(hooks.tool.pixelcrabs_prepare_web.execute({ directory: ".." }, { ...context, async ask(input) { expect(input.permission).toBe("external_directory"); throw new Error("External denied") } })).rejects.toThrow("External denied")
+    const result = await hooks.tool.pixelcrabs_prepare_web.execute({}, context)
+    expect(JSON.parse(typeof result === "string" ? result : result.output).status).toBe("not_required")
+    expect(downloads).toBe(0)
+    await expect(hooks.tool.pixelcrabs_prepare_web.execute({}, { ...context, abort: AbortSignal.abort() })).rejects.toThrow()
+  } finally {
+    await hooks.dispose()
+    if (path.dirname(root) !== os.tmpdir() || !path.basename(root).startsWith("pixelcrabs-plugin-")) throw new Error("Invalid fixture")
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
 test("local export uses native permissions, creates a distinct artifact and never publishes", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "pixelcrabs-plugin-"))
   const hooks = await WebPreviewPlugin()

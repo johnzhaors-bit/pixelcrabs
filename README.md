@@ -62,7 +62,7 @@ This repository is the home of the **Web-focused open-source edition**. The Open
 
 PixelCrab account services, platform model billing, cloud hosting, marketplace publishing and dedicated mini app preview/publishing integrations are outside the public source scope. Design packs and other third-party resources have their own distribution and licensing requirements.
 
-We publish each module after reviewing its source boundary and verifying it independently. A complete desktop release will follow once the Web workflow builds and runs without private modules. Forking this repository gives you the upstream coding engine source and the foundation modules below. The preview panel is connected to the native engine and composer. Complete model-edit/recheck acceptance, automatic environment preparation, generic network integration and local export remain in progress.
+We publish each module after reviewing its source boundary and verifying it independently. A complete desktop release will follow once the Web workflow builds and runs without private modules. Forking this repository gives you the upstream coding engine source and the foundation modules below. The preview panel is connected to the native engine and composer. Generic system networking, local static export and native dependency preparation are published. Independent distribution and complete model-edit/recheck acceptance remain in progress.
 
 ## Development roadmap
 
@@ -134,7 +134,7 @@ The shared Web modules now expose `discoverWebProject(directory)` and `createWeb
 
 The manager owns its child processes, verifies listener ownership, scopes runtimes to a conversation, routes local HTTP/HMR through a runtime gateway and recovers resources on stop or project switch. It uses the current executable for the managed Node shim; an Electron host uses Electron's Node mode. It does not install system Node. Windows ownership checks use PowerShell; macOS/Linux require `lsof`. These are trusted development tools, not a sandbox for untrusted projects.
 
-Independent tests cover static startup, reuse, project switching, cross-conversation rejection, cancellation and cleanup. A running process does not establish that a desktop panel has displayed the right page. The native Agent plugin is available below. The desktop panel and build are available below; generic network integration remains in preparation.
+Independent tests cover static startup, reuse, project switching, cross-conversation rejection, cancellation and cleanup. A running process does not establish that a desktop panel has displayed the right page. The native Agent plugin is available below. The desktop panel and build are available below; standard Provider/MCP networking is available through Electron.
 
 ## Connect the native OpenCode preview tool
 
@@ -150,7 +150,7 @@ The vendored engine already includes this plugin; do not register it a second ti
 
 After restarting OpenCode, ask the Agent to discover the current project and start a Web preview with `pixelcrabs_preview`. It exposes discover, start, verify, list, logs and stop; starting a process uses native permission checks. External project directories require a separate native permission. Runtime IDs are scoped to the conversation. The plugin returns a local URL and process evidence; the integrated desktop opens that verified runtime in the preview panel. Code changes still use OpenCode's own editing tools.
 
-The plugin depends only on the reviewed runtime and OpenCode's MIT plugin API. It does not connect to PixelCrab account, billing, marketplace or publishing services. Normal engine disposal or deleting the session releases its previews. Framework dependencies must still be prepared through the project's own package manager and the normal OpenCode permission flow.
+The plugin depends only on the reviewed runtime and OpenCode's MIT plugin API. It does not connect to PixelCrab account, billing, marketplace or publishing services. Normal engine disposal or deleting the session releases its previews. The Agent can call `pixelcrabs_prepare_web` under native permissions to prepare dependencies, then re-run discovery/start.
 
 ## Native Web presentation modules
 
@@ -200,7 +200,7 @@ bun x --no-install electron-vite preview
 
 This uses the embedded Node sidecar (leave `OPENCODE_SIDECAR_V2` unset). Open a project, use your normal OpenCode provider and ask the Agent to discover and start a preview with `pixelcrabs_preview`. The Web Preview panel is also available in a new-session draft; an HTTP/HTTPS address can be opened manually. Point/region evidence and multi-selection targets are added to the composer for you to review and send. The panel never edits project files itself.
 
-The development UI currently retains upstream branding and identity. Do not publish installers from it yet: independent branding/update configuration, dependency preparation and managed local builds are still pending. Windows Git checkouts that materialize the upstream `custom-elements.d.ts` symlink as plain text need a portable typecheck fix; this does not prevent the tested desktop bundle build.
+The development UI currently retains upstream branding and identity. Do not publish installers from it yet: independent branding/update configuration and real-model end-to-end acceptance are still pending. Windows Git checkouts that materialize the upstream `custom-elements.d.ts` symlink as plain text need a portable typecheck fix; this does not prevent the tested desktop bundle build.
 
 After building, the isolated desktop smoke can be run with Electron and `scripts/test-desktop-session.cjs` from the repository root. It creates temporary application/project state and closes its own app when finished. Check `.tmp/full-desktop-smoke-result.json`; a launcher exit code alone is not acceptance. No model call is made by that test.
 
@@ -234,10 +234,18 @@ The shared module contains no hosted service URLs, marketplace routing or accoun
 
 The native `pixelcrabs_web_export` tool copies an explicitly selected static artifact directory into a new unique folder under an existing destination parent. It requires `index.html`, reports excluded files, and uses native OpenCode permissions for export and external paths. It never uploads or deploys. Build framework projects with their own scripts through the normal Agent tools before selecting the output directory; server-only output is not a static site.
 
-Hidden files, dependencies, package manifests, source maps and non-Web file types are excluded; links and special files are rejected. Limits are 10,000 copied files and 512 MiB. Use trusted, completed build output: this is not a secret scanner or an atomic snapshot of a concurrently changing project. Automatic dependency preparation and managed framework builds are still pending.
+Hidden files, dependencies, package manifests, source maps and non-Web file types are excluded; links and special files are rejected. Limits are 10,000 copied files and 512 MiB. Use trusted, completed build output: this is not a secret scanner or an atomic snapshot of a concurrently changing project. Dependency preparation is available through the native tool; framework builds use the project's scripts through native terminal tools.
 
 ### Managed package-manager foundation
 
 `packages/local-runtime/src/managed-web-package.ts` provides an opt-in pnpm lease for hosts: supply an application-owned absolute cache directory and a `fetchImpl` using the host network policy. It downloads pinned pnpm 10.34.6 from npm, verifies its reviewed SHA-512, caches only the verified archive, and extracts a fresh lease with tar 7.5.22. Release the lease after its consumers stop. It does not change system Node or global PATH. The upstream pnpm MIT license and tar BlueOak-1.0.0 license remain applicable.
 
-The real integration test verifies download, offline cache reuse, dependency installation with lifecycle scripts disabled, and Vite preview startup/shutdown in a fresh project. Run `node --test packages/local-runtime/test/public-managed-package.mjs` after installing the pinned local-runtime dependencies; registry access is required. This foundation is not yet wired into the Agent preparation flow or desktop transport, and must not be treated as automatic dependency installation in the desktop app. pnpm 12 uses a different native-binary bootstrap and is deliberately not substituted.
+The real integration test verifies download, offline cache reuse, dependency installation with lifecycle scripts disabled, and Vite preview startup/shutdown in a fresh project. Run `node --test packages/local-runtime/test/public-managed-package.mjs` after installing the pinned local-runtime dependencies; registry access is required. The native `pixelcrabs_prepare_web` tool now consumes this foundation, with the desktop injecting its shared network transport for the pnpm archive download. pnpm 12 uses a different native-binary bootstrap and is deliberately not substituted.
+
+### Preparing a Web project
+
+When preview discovery reports missing dependencies, the Agent can call `pixelcrabs_prepare_web`, then rediscover and start the preview. The tool requests native installation/external-directory permission, prepares Node, runs a finite package-manager install with lifecycle scripts disabled, and reports actual exit status and remaining missing dependencies. A successful install does not assert a running preview. Managed paths also reach the native shell through OpenCode's `shell.env` hook.
+
+Existing npm, pnpm and Bun executables are reused when they match the declared package-manager version. If pnpm is missing, a project with no explicit version or the pinned 10.34.6 version can use the managed lease. Yarn, other missing managers or version mismatches return `needs_setup` for the native Agent to resolve without silently rewriting the project. Existing lockfiles are respected; required lifecycle rebuilds use native tools with their own permissions.
+
+Only the managed tool archive download uses Electron here. Dependency installation retains the package manager's registry/proxy settings; arbitrary child-process HTTPS is not automatically routed through Chromium. Projects are trusted code, not sandboxed by `--ignore-scripts`. Run `node --test packages/local-runtime/test/public-web-environment.mjs` for the native-tool missing-dependency → preparation → Vite startup/cleanup fixture.

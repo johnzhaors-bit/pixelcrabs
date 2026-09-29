@@ -4,13 +4,21 @@ import { tool } from "@opencode-ai/plugin/tool"
 import { createWebRuntimeManager } from "./web-runtime.ts"
 import { sanitizePreviewLog } from "./preview-process.ts"
 import { exportStaticWeb } from "./web-export.ts"
+import { createWebEnvironment, type WebEnvironmentOptions } from "./web-environment.ts"
 
 /** OpenCode owns the session, permissions and coding loop. This plugin only
  * inspects projects and manages explicitly selected local Web processes. */
-export const WebPreviewPlugin = async () => {
-  const manager = createWebRuntimeManager()
+export const WebPreviewPlugin = async (_input?: unknown, options?: WebEnvironmentOptions) => {
+  const environment = createWebEnvironment(options)
+  const manager = createWebRuntimeManager({ environment: directory => environment.environment(directory) })
   return {
-    dispose: () => manager.dispose(),
+    async dispose() { await manager.dispose(); await environment.dispose() },
+    async "shell.env"(input: { cwd: string }, output: { env: Record<string, string> }) {
+      const directory = await realpath(input.cwd)
+      const env = environment.environment(directory, output.env)
+      if (env.PATH) output.env.PATH = env.PATH
+      if (env.Path) output.env.Path = env.Path
+    },
     async event({ event }: { event: { type: string; properties: unknown } }) {
       if (event.type !== "session.deleted") return
       const properties = event.properties as { info?: { id?: unknown } } | undefined
@@ -19,9 +27,31 @@ export const WebPreviewPlugin = async () => {
       for (const record of manager.list(id)) await manager.stop(id, record.runtimeId)
     },
     async "experimental.chat.system.transform"(_input: unknown, output: { system: string[] }) {
-      output.system.push("Use pixelcrabs_preview to discover and run trusted local Web projects. Preserve the project's actual framework. Choose an adapter returned by discover; do not infer readiness from detection alone. The runtime has a managed Node capability. Missing project dependencies are separate from missing Node: use the project's package manager through OpenCode's normal permission flow when preparation is needed. Runtime verification checks HTTP and process ownership only; never claim that a desktop panel or screenshot was verified unless presentation evidence was actually returned. Continue to use OpenCode's normal file editing tools and original conversation for all code changes.")
+      output.system.push("Use pixelcrabs_preview to discover and run trusted local Web projects. Preserve the project's actual framework. Choose an adapter returned by discover; do not infer readiness from detection alone. Node is managed. When dependencies are missing, call pixelcrabs_prepare_web under native permissions, then rediscover and start the preview. Preparation preserves the project's package manager and lockfile, skips lifecycle scripts, and reports unsupported toolchains; it never proves preview readiness. Use native terminal tools for explicitly needed rebuild/build scripts. Runtime verification checks HTTP and process ownership only; never claim that a desktop panel or screenshot was verified unless presentation evidence was actually returned. Continue to use OpenCode's normal file editing tools and original conversation for all code changes.")
     },
     tool: {
+      pixelcrabs_prepare_web: tool({
+        description: "Prepare dependencies of a trusted Web project under native permissions. Reuses managed Node, preserves the project's manager and lockfile; can supply pinned pnpm when none is installed. Skips lifecycle scripts; does not build, edit source or verify preview. Desktop downloads the managed tool using its network transport; package-manager dependency requests retain the manager's proxy/registry configuration.",
+        args: { directory: tool.schema.string().optional() },
+        async execute(args, context) {
+          context.abort.throwIfAborted()
+          const base = await realpath(context.directory)
+          const directory = await realpath(path.resolve(base, args.directory ?? "."))
+          const relative = path.relative(base, directory)
+          if (path.isAbsolute(relative) || relative === ".." || relative.startsWith(".." + path.sep)) {
+            await context.ask({ permission: "external_directory", patterns: [directory], always: [directory], metadata: { action: "prepare", directory } })
+          }
+          await context.ask({ permission: "pixelcrabs_prepare_web", patterns: [directory], always: [directory], metadata: { directory, lifecycleScripts: "disabled" } })
+          context.abort.throwIfAborted()
+          try {
+            const facts = await environment.prepare(directory, context.abort)
+            return { title: "Web environment", output: JSON.stringify(facts), metadata: { pixelcrabsEnvironment: facts } }
+          } catch (error) {
+            if (context.abort.aborted) throw error
+            return { title: "Web environment failed", output: JSON.stringify({ status: "failed", message: sanitizePreviewLog(error instanceof Error ? error.message : String(error)) }), metadata: {} }
+          }
+        },
+      }),
       pixelcrabs_web_export: tool({
         description: "Export a trusted static Web artifact directory containing index.html into a new unique local folder. Run the project's real build through native tools first when needed. Does not build, upload or deploy. Excludes hidden files, dependencies, package manifests, source maps and non-Web file types; not a secret scanner. Server-only output requires a different deployment target.",
         args: {

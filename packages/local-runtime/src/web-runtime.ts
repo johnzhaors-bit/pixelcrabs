@@ -17,7 +17,7 @@ export type WebRuntimeStart = { conversationId: string; directory: string; adapt
 
 /** Host must authorize the explicit project before calling. This manager owns
  * only its spawned processes; an HTTP 200 alone never establishes ownership. */
-export function createWebRuntimeManager(options: { environment?: () => NodeJS.ProcessEnv; startupTimeoutMs?: number } = {}) {
+export function createWebRuntimeManager(options: { environment?: (directory: string) => NodeJS.ProcessEnv; startupTimeoutMs?: number } = {}) {
   const managed = new Map<string, Managed>()
   const queues = new Map<string, Promise<unknown>>()
   let disposed = false
@@ -74,7 +74,7 @@ export function createWebRuntimeManager(options: { environment?: () => NodeJS.Pr
       await lease.ensureNode()
       const invocation = previewSpawnInvocation(profile.command, [...profile.args, ...webPreviewPortArgs(profile, reservation.port)])
       const child = spawn(invocation.command, invocation.args, {
-        cwd: discovery.directory, env: { ...lease.environment(options.environment?.() ?? process.env), BROWSER: "none", BOT: "false", ...(process.versions.electron && profile.command === process.execPath ? { ELECTRON_RUN_AS_NODE: "1" } : {}) },
+        cwd: discovery.directory, env: { ...lease.environment(options.environment?.(discovery.directory) ?? process.env), BROWSER: "none", BOT: "false", ...(process.versions.electron && profile.command === process.execPath ? { ELECTRON_RUN_AS_NODE: "1" } : {}) },
         windowsHide: true, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"],
       })
       const upstreamUrl = `http://127.0.0.1:${reservation.port}/`

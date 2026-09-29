@@ -43,6 +43,7 @@ jobs:
         run: |
           bun test packages/local-runtime/test/managed-web-package.test.ts
           node --test packages/local-runtime/test/public-managed-package.mjs
+          node --test packages/local-runtime/test/public-web-environment.mjs
       - name: Verify native preview tool permissions and lifecycle
         working-directory: packages/local-runtime
         run: bun test test/web-preview-plugin.test.ts
