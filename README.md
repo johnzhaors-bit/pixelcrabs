@@ -77,7 +77,7 @@ We are preparing the public Web edition in small, verifiable steps. The status c
 | Separate Web discovery, managed Node and owned process lifecycle | Published; static HTML and a real Vite project pass runtime lifecycle tests |
 | Connect Agent tools to preview management | Built-in preview plugin and desktop presentation connected |
 | Separate native preview host and visual workbench | Draft/existing session panels connected; native draft and screenshot smoke passed |
-| Generic network integration | Planned |
+| Generic network integration | Published: standard HTTPS providers and remote MCP use Electron system networking; custom transports/child processes retain their own behavior |
 | Add an independent desktop identity and build configuration | Planned |
 | Complete dependency/license review and a clean Web workflow build | Required before the first source release |
 | Publish source and license incrementally | Reviewed modules under MIT; experimental desktop build instructions below |
