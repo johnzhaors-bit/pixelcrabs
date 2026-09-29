@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: 24
       - name: Test public Web discovery, owned processes and gateway
-        run: node --test packages/local-runtime/test/public-preview-core.test.mjs packages/local-runtime/test/public-static-preview.test.mjs packages/local-runtime/test/public-web-project.test.mjs packages/local-runtime/test/public-web-runtime.test.mjs packages/local-runtime/test/public-preview-gateway.test.mjs
+        run: node --test packages/local-runtime/test/public-web-export.test.mjs packages/local-runtime/test/public-preview-core.test.mjs packages/local-runtime/test/public-static-preview.test.mjs packages/local-runtime/test/public-web-project.test.mjs packages/local-runtime/test/public-web-runtime.test.mjs packages/local-runtime/test/public-preview-gateway.test.mjs
       - name: Test generic network transport and engine routing
         run: |
           node --test packages/platform-desktop/test/system-network-bridge.test.mjs

@@ -200,7 +200,7 @@ bun x --no-install electron-vite preview
 
 This uses the embedded Node sidecar (leave `OPENCODE_SIDECAR_V2` unset). Open a project, use your normal OpenCode provider and ask the Agent to discover and start a preview with `pixelcrabs_preview`. The Web Preview panel is also available in a new-session draft; an HTTP/HTTPS address can be opened manually. Point/region evidence and multi-selection targets are added to the composer for you to review and send. The panel never edits project files itself.
 
-The development UI currently retains upstream branding and identity. Do not publish installers from it yet: independent branding/update configuration, network integration, dependency preparation and local build/export are still pending. Windows Git checkouts that materialize the upstream `custom-elements.d.ts` symlink as plain text need a portable typecheck fix; this does not prevent the tested desktop bundle build.
+The development UI currently retains upstream branding and identity. Do not publish installers from it yet: independent branding/update configuration, dependency preparation and managed local builds are still pending. Windows Git checkouts that materialize the upstream `custom-elements.d.ts` symlink as plain text need a portable typecheck fix; this does not prevent the tested desktop bundle build.
 
 After building, the isolated desktop smoke can be run with Electron and `scripts/test-desktop-session.cjs` from the repository root. It creates temporary application/project state and closes its own app when finished. Check `.tmp/full-desktop-smoke-result.json`; a launcher exit code alone is not acceptance. No model call is made by that test.
 
@@ -229,3 +229,9 @@ Provider availability and free-tier eligibility are controlled by each provider.
 The public desktop establishes a process-scoped loopback transport before starting its embedded engine. Standard HTTPS provider requests and remote HTTP/SSE MCP requests use Electron's Chromium transport and its system proxy/PAC policy, independently of account state. Loopback model endpoints stay direct. Custom provider fetch implementations retain their own transport; arbitrary child processes and package managers are not automatically routed through Electron. The current bridge does not proxy plain HTTP destinations.
 
 The shared module contains no hosted service URLs, marketplace routing or account implementation. A failed write is not automatically replayed and a proxy failure does not force direct access. Windows tests cover Chromium direct → test proxy → direct with streaming responses; platform-specific enterprise proxy authentication and production PAC deployment still require real-machine validation.
+
+### Local static Web export
+
+The native `pixelcrabs_web_export` tool copies an explicitly selected static artifact directory into a new unique folder under an existing destination parent. It requires `index.html`, reports excluded files, and uses native OpenCode permissions for export and external paths. It never uploads or deploys. Build framework projects with their own scripts through the normal Agent tools before selecting the output directory; server-only output is not a static site.
+
+Hidden files, dependencies, package manifests, source maps and non-Web file types are excluded; links and special files are rejected. Limits are 10,000 copied files and 512 MiB. Use trusted, completed build output: this is not a secret scanner or an atomic snapshot of a concurrently changing project. Automatic dependency preparation and managed framework builds are still pending.
