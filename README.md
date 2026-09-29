@@ -220,7 +220,7 @@ PixelCrab is built on [OpenCode](https://github.com/anomalyco/opencode). Upstrea
 
 </div>
 
-The real Vite integration test installs a pinned Vite version in a fresh temporary directory, verifies transformed and updated source through the preview gateway, and checks process ownership and shutdown. Run `node --test packages/local-runtime/test/public-vite-runtime.mjs` with Bun 1.3.14 on PATH (or set `PIXELCRABS_TEST_BUN` to its absolute executable). It requires registry access and does not replace a real-model desktop editing acceptance test.
+The real Vite integration test installs a pinned Vite version in a fresh temporary directory, verifies transformed and updated source through the preview gateway, and checks process ownership and shutdown, then builds with the project script, exports the static output and serves its bundled assets. Run `node --test packages/local-runtime/test/public-vite-runtime.mjs` with Bun 1.3.14 on PATH (or set `PIXELCRABS_TEST_BUN` to its absolute executable). It requires registry access and does not replace a real-model desktop editing acceptance test.
 
 Provider availability and free-tier eligibility are controlled by each provider. An OpenCode-compatible API or model catalog entry does not guarantee that a provider permits its free tier in a derived desktop client. Use your own supported provider configuration for end-to-end editing tests; this project does not bypass provider client restrictions.
 

@@ -6,6 +6,7 @@ import os from "node:os"
 import path from "node:path"
 import { test } from "node:test"
 import { createWebRuntimeManager } from "../src/web-runtime.ts"
+import { exportStaticWeb } from "../src/web-export.ts"
 
 // Node on Windows need not resolve Chromium's *.localhost names. Keep the
 // gateway Host header while connecting explicitly to its loopback listener.
@@ -25,7 +26,7 @@ function page(url) {
   })
 }
 
-test("real Vite: discovery, transforms, source update, ownership and process cleanup", { timeout: 180000 }, async () => {
+test("real Vite: preview, update, build, static export, asset serving and cleanup", { timeout: 180000 }, async () => {
   const parent = path.resolve(os.tmpdir())
   const directory = await mkdtemp(path.join(parent, "pixelcrabs-vite-test-"))
   const bun = process.env.PIXELCRABS_TEST_BUN || "bun"
@@ -35,7 +36,7 @@ test("real Vite: discovery, transforms, source update, ownership and process cle
   try {
     await mkdir(path.join(directory, "src"))
     await writeFile(path.join(directory, "package.json"), JSON.stringify({ private: true, type: "module",
-      packageManager: "bun@1.3.14", scripts: { dev: "vite --host 127.0.0.1" }, devDependencies: { vite: "7.1.4" } }))
+      packageManager: "bun@1.3.14", scripts: { dev: "vite --host 127.0.0.1", build: "vite build" }, devDependencies: { vite: "7.1.4" } }))
     await writeFile(path.join(directory, "index.html"), '<!doctype html><div id="app"></div><script type="module" src="/src/main.js"></script>')
     const source = path.join(directory, "src/main.js")
     await writeFile(source, 'document.querySelector("#app").textContent = "Framework preview"')
@@ -61,6 +62,23 @@ test("real Vite: discovery, transforms, source update, ownership and process cle
     await manager.stop("vite-test", started.record.runtimeId)
     assert.deepEqual(manager.list("vite-test"), [])
     await assert.rejects(fetch(started.record.upstreamUrl, { signal: AbortSignal.timeout(3000) }))
+    // Build with the project's own script, as the native Agent terminal does.
+    // The export tool must deliver real static assets, not the development server.
+    execFileSync(bun, ["run", "build"], { cwd: directory, env: environment, windowsHide: true, stdio: "pipe", timeout: 60000 })
+    const artifact = await exportStaticWeb({ sourceDirectory: path.join(directory, "dist"), destinationParent: directory })
+    assert.equal(artifact.published, false)
+    assert.ok(artifact.files >= 2)
+    const exported = await manager.start({ conversationId: "vite-export", directory: artifact.directory, adapterId: "web-static" })
+    assert.equal(exported.status, "running", exported.message)
+    const html = await page(exported.record.url)
+    assert.equal(html.status, 200)
+    assert.equal(html.body.includes("/@vite/client"), false)
+    const script = html.body.match(/src="([^"]+\.js)"/)
+    assert.ok(script, "Static build must contain its bundled entry")
+    const asset = await page(new URL(script[1], exported.record.url))
+    assert.equal(asset.status, 200)
+    assert.ok(asset.body.includes("Framework updated"))
+    await manager.stop("vite-export", exported.record.runtimeId)
   } finally {
     await manager.dispose()
     // Delete only the fresh fixture created by this test, never a supplied path.
