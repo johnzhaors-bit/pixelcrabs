@@ -1,0 +1,93 @@
+name: OpenCode foundation smoke
+on:
+  push:
+    branches: [main]
+    paths: ["upstream/opencode/**", "packages/local-runtime/**", "packages/platform-desktop/**", "scripts/check-google-key-literals.py", ".github/workflows/opencode-smoke.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  engine:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    env:
+      HUSKY: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Reject credential-shaped Google literals
+        run: python3 scripts/check-google-key-literals.py
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Test public Web discovery, owned processes and gateway
+        run: node --test packages/local-runtime/test/public-web-export.test.mjs packages/local-runtime/test/public-preview-core.test.mjs packages/local-runtime/test/public-static-preview.test.mjs packages/local-runtime/test/public-web-project.test.mjs packages/local-runtime/test/public-web-runtime.test.mjs packages/local-runtime/test/public-preview-gateway.test.mjs
+      - name: Test generic network transport and engine routing
+        run: |
+          node --test packages/platform-desktop/test/system-network-bridge.test.mjs
+          bun test upstream/opencode/packages/opencode/test/pixelcrab/system-network-runtime.test.ts
+      - name: Test independent Web presentation domain
+        run: node --test upstream/opencode/packages/desktop/src/pixelcrab/public-web-preview-domain.test.mjs
+      - name: Verify a real Vite project and process cleanup
+        run: node --test packages/local-runtime/test/public-vite-runtime.mjs
+      - name: Test evidence attachments and visual target verification
+        run: bun test upstream/opencode/packages/app/src/pixelcrab/web-preview-recheck.test.ts upstream/opencode/packages/app/src/pixelcrab/evidence-prompt.test.ts upstream/opencode/packages/app/src/pixelcrab/evidence-recheck-lifecycle.test.ts upstream/opencode/packages/app/src/pixelcrab/visual-change-set.test.ts
+      - name: Install pinned native plugin API
+        working-directory: packages/local-runtime
+        run: bun install --frozen-lockfile --ignore-scripts
+      - name: Verify managed pnpm integrity and real dependency preparation
+        run: |
+          bun test packages/local-runtime/test/managed-web-package.test.ts
+          node --test packages/local-runtime/test/public-managed-package.mjs
+          node --test packages/local-runtime/test/public-web-environment.mjs
+      - name: Verify native preview tool permissions and lifecycle
+        working-directory: packages/local-runtime
+        run: bun test test/web-preview-plugin.test.ts
+      - name: Install official locked dependencies
+        working-directory: upstream/opencode
+        run: bun install --frozen-lockfile
+      - name: Verify synthetic recorder fixture
+        working-directory: upstream/opencode/packages/http-recorder
+        run: bun test test/record-replay.test.ts --test-name-pattern 'detects secret-looking values without returning the secret'
+      - name: Verify public distribution isolation and disabled updater
+        working-directory: upstream/opencode/packages/desktop
+        run: |
+          bun ./scripts/copy-icons.ts
+          bun test electron-builder.config.test.ts src/renderer/html.test.ts
+      - name: Build the embedded public engine
+        working-directory: upstream/opencode/packages/opencode
+        env:
+          OPENCODE_VERSION: 0.0.0-preview-web
+          OPENCODE_CHANNEL: dev
+        run: bun script/build-node.ts
+      - name: Build the public desktop and session panel
+        working-directory: upstream/opencode/packages/desktop
+        env:
+          OPENCODE_CHANNEL: dev
+          NODE_OPTIONS: --max-old-space-size=6144
+        run: bun x --no-install electron-vite build
+      - name: Verify CLI and local API without an account
+        working-directory: upstream/opencode
+        run: |
+          export XDG_CONFIG_HOME="$RUNNER_TEMP/opencode-smoke/config"
+          export XDG_DATA_HOME="$RUNNER_TEMP/opencode-smoke/data"
+          export XDG_CACHE_HOME="$RUNNER_TEMP/opencode-smoke/cache"
+          export OPENCODE_CONFIG_DIR="$XDG_CONFIG_HOME/opencode"
+          bun dev --help
+          bun dev serve --hostname 127.0.0.1 --port 4199 > "$RUNNER_TEMP/opencode-smoke.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:4199/global/health > "$RUNNER_TEMP/opencode-health.json"; then
+              node -e 'const fs=require("node:fs"); const data=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if(data.healthy!==true) process.exit(1); console.log("Local OpenCode API is healthy")' "$RUNNER_TEMP/opencode-health.json"
+              exit 0
+            fi
+            kill -0 "$server_pid" || break
+            sleep 1
+          done
+          tail -n 60 "$RUNNER_TEMP/opencode-smoke.log"
+          exit 1

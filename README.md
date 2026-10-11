@@ -17,7 +17,7 @@
   <a href="README.zh-CN.md">简体中文</a>
 </p>
 
-> This is the new canonical open-source repository for PixelCrabs. The reviewed source tree is being imported in a separate, auditable commit. For a ready-to-use desktop build, visit the official website.
+> This is the new canonical open-source repository for PixelCrabs. It contains the reviewed Web-first source snapshot. For a ready-to-use desktop build, visit the official website.
 
 ## Why PixelCrabs?
 
@@ -63,7 +63,45 @@ The hosted PixelCrabs account system, platform model credentials and billing, cl
 
 ## Repository status
 
-The repository has been restarted with a clean public history. The first reviewed source snapshot will follow this foundation commit and will include exact build, test and provenance information. Until that import lands, use the official desktop download to try the complete product.
+The repository has restarted with a clean public history. Its reviewed source snapshot is derived from the final public commit of the legacy repository and includes:
+
+- a pinned OpenCode engine snapshot under `upstream/opencode`;
+- the local Web runtime, preview gateway and static export foundation under `packages/local-runtime`;
+- the generic desktop system-network bridge under `packages/platform-desktop`;
+- public tests and a Linux smoke workflow.
+
+The ready-to-use commercial desktop app remains a separate distribution. This repository is the source-first public edition and does not contain PixelCrabs platform services.
+
+## Quick start
+
+To preview a trusted static site with **Node.js 24 or later**, run this from the repository root:
+
+```sh
+node packages/local-runtime/bin/static-preview.mjs /absolute/path/to/your/site
+```
+
+The selected directory must contain `index.html`. Open the localhost URL printed in the terminal and press **Ctrl+C** to stop. Framework projects such as React, Vue, Next.js, Nuxt and Astro should use their own development server.
+
+To work with the pinned OpenCode engine, install **Bun 1.3.14** and use its preserved lockfile:
+
+```sh
+cd upstream/opencode
+bun install --frozen-lockfile
+bun dev --help
+bun dev /absolute/path/to/your/project
+```
+
+Run the dependency-free public runtime tests with:
+
+```sh
+node --test packages/local-runtime/test/public-preview-core.test.mjs \
+  packages/local-runtime/test/public-static-preview.test.mjs \
+  packages/local-runtime/test/public-web-project.test.mjs \
+  packages/local-runtime/test/public-web-runtime.test.mjs \
+  packages/local-runtime/test/public-preview-gateway.test.mjs
+```
+
+The [CI workflow](.github/workflows/opencode-smoke.yml) documents the broader locked-dependency build and test sequence. Some tests download packages and require a native compiler toolchain.
 
 ## Security and privacy
 

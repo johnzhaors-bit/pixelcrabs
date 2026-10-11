@@ -17,7 +17,7 @@
   <a href="README.md">English</a>
 </p>
 
-> 这是 PixelCrabs 新的官方开源仓库。经过文件级审计的源码将作为独立、可追溯的提交导入。希望直接体验完整桌面产品，请访问官方网站。
+> 这是 PixelCrabs 新的官方开源仓库，已包含经过文件级审计的 Web 优先源码快照。希望直接体验完整桌面产品，请访问官方网站。
 
 ## 为什么选择 PixelCrabs？
 
@@ -63,7 +63,45 @@ PixelCrabs 托管账号、平台模型凭证与计费、云托管、市场运营
 
 ## 当前状态
 
-本仓库使用全新的公开历史重新开始。首批经过审查的源码将在本次基础提交之后导入，并附带准确的构建、测试与来源信息。在此之前，如需体验完整产品，请从官网下载桌面版。
+本仓库使用全新的公开历史重新开始。当前源码快照来自旧公开仓库最后一个公开提交，并包含：
+
+- `upstream/opencode` 中固定版本的 OpenCode 引擎源码；
+- `packages/local-runtime` 中的本地 Web 运行、预览网关与静态导出基础；
+- `packages/platform-desktop` 中的通用桌面系统网络桥接；
+- 公开测试与 Linux 冒烟测试工作流。
+
+可直接使用的商业桌面版仍然单独分发。本仓库是源码优先的公开版，不包含 PixelCrabs 平台服务。
+
+## 快速开始
+
+安装 **Node.js 24 或更高版本** 后，可在仓库根目录预览可信的静态网站：
+
+```sh
+node packages/local-runtime/bin/static-preview.mjs /你的/网站/绝对路径
+```
+
+目标目录必须包含 `index.html`。打开终端输出的本地地址，按 **Ctrl+C** 停止。React、Vue、Next.js、Nuxt、Astro 等框架项目应使用自身开发服务器。
+
+如需运行固定版本的 OpenCode 引擎，请安装 **Bun 1.3.14** 并使用保留的锁文件：
+
+```sh
+cd upstream/opencode
+bun install --frozen-lockfile
+bun dev --help
+bun dev /你的/项目/绝对路径
+```
+
+无需安装依赖即可运行公开运行时的基础测试：
+
+```sh
+node --test packages/local-runtime/test/public-preview-core.test.mjs \
+  packages/local-runtime/test/public-static-preview.test.mjs \
+  packages/local-runtime/test/public-web-project.test.mjs \
+  packages/local-runtime/test/public-web-runtime.test.mjs \
+  packages/local-runtime/test/public-preview-gateway.test.mjs
+```
+
+[CI 工作流](.github/workflows/opencode-smoke.yml)记录了需要锁定依赖的完整构建与测试顺序；其中部分测试需要下载依赖和本机编译工具链。
 
 ## 安全与隐私
 

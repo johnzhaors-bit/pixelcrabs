@@ -4,9 +4,13 @@ PixelCrabs is built on OpenCode and other open-source software.
 
 ## OpenCode
 
-The reviewed source import records the exact upstream OpenCode commit used by the public edition. Vendored OpenCode files retain their upstream copyright, MIT license, notices and repository documentation. PixelCrabs-specific changes do not replace or narrow those upstream terms.
+The vendored source under `upstream/opencode` is based on official OpenCode commit [`9f69463f1d556af2b5b51d2efa1c04f5f544f911`](https://github.com/anomalyco/opencode/commit/9f69463f1d556af2b5b51d2efa1c04f5f544f911), with reviewed PixelCrabs public-edition changes. Vendored OpenCode files retain their upstream copyright, MIT license, notices and repository documentation. PixelCrabs-specific changes do not replace or narrow those upstream terms.
 
 Upstream project: <https://github.com/anomalyco/opencode>
+
+## Public snapshot
+
+The first source import in this restarted repository reproduces the reviewed public tree from the former `pixelcrabs-legacy` repository at commit [`a1317ad3d7b334fdd558f9c4f18581bd2f2db409`](https://github.com/johnzhaors-bit/pixelcrabs-legacy/commit/a1317ad3d7b334fdd558f9c4f18581bd2f2db409). The restarted repository intentionally does not copy the former Git history, private PixelCrabs branches or unpublished platform components.
 
 ## Other dependencies
 
